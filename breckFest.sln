@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "breckFest", "breakFest\breckFest.csproj", "{FB5D7164-0DCB-4E6B-AC84-B5B0371EBB84}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "breckFest", "breckFest\breckFest.csproj", "{FB5D7164-0DCB-4E6B-AC84-B5B0371EBB84}"
 	ProjectSection(ProjectDependencies) = postProject
 		{8B187D46-BC8E-4B5A-AE68-326958BC9AAA} = {8B187D46-BC8E-4B5A-AE68-326958BC9AAA}
 	EndProjectSection
@@ -25,8 +25,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal
