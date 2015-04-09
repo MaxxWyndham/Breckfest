@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "breckFest", "breakFest\breckFest.csproj", "{FB5D7164-0DCB-4E6B-AC84-B5B0371EBB84}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8B187D46-BC8E-4B5A-AE68-326958BC9AAA} = {8B187D46-BC8E-4B5A-AE68-326958BC9AAA}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LibSquishNet", "..\LibSquishNet\LibSquishNet\LibSquishNet.csproj", "{8B187D46-BC8E-4B5A-AE68-326958BC9AAA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FB5D7164-0DCB-4E6B-AC84-B5B0371EBB84}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB5D7164-0DCB-4E6B-AC84-B5B0371EBB84}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB5D7164-0DCB-4E6B-AC84-B5B0371EBB84}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB5D7164-0DCB-4E6B-AC84-B5B0371EBB84}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B187D46-BC8E-4B5A-AE68-326958BC9AAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B187D46-BC8E-4B5A-AE68-326958BC9AAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B187D46-BC8E-4B5A-AE68-326958BC9AAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B187D46-BC8E-4B5A-AE68-326958BC9AAA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
+	EndGlobalSection
+EndGlobal

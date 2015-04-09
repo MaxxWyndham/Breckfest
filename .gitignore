@@ -1,0 +1,7 @@
+[Bb]in
+[Dd]ebug*/
+[Rr]elease*/
+[Pp]ackages*/
+obj/
+*.suo
+*.csproj.user
