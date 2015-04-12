@@ -399,10 +399,12 @@ namespace breckFest
             {
                 for (uint i = 0; i < data.Length - 4; i += 4)
                 {
-                    dest[i + 0] = data[i + 2];
-                    dest[i + 1] = data[i + 1];
-                    dest[i + 2] = data[i + 0];
-                    dest[i + 3] = data[i + 3];
+                    uint colour = (uint)((data[i + 3] << 24) | (data[i + 2] << 16) | (data[i + 1] << 8) | (data[i + 0] << 0));
+
+                    dest[i + 0] = (byte)((colour & this.pixelFormat.BBitMask) >> 0);
+                    dest[i + 1] = (byte)((colour & this.pixelFormat.GBitMask) >> 8);
+                    dest[i + 2] = (byte)((colour & this.pixelFormat.RBitMask) >> 16);
+                    dest[i + 3] = (byte)((colour & this.pixelFormat.ABitMask) >> 24);
                 }
             }
             else
