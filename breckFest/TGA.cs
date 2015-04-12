@@ -6,16 +6,9 @@ using System.Runtime.InteropServices;
 
 namespace breckFest
 {
-    public class TGA
+    public class TGA : Texture
     {
-        Bitmap bitmap;
-
-        public Bitmap Bitmap
-        {
-            get { return bitmap; }
-        }
-
-        public static TGA Load(string path)
+        public static new TGA Load(string path)
         {
             return TGA.Load(File.ReadAllBytes(path));
         }

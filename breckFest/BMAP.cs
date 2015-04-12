@@ -31,6 +31,12 @@ namespace breckFest
             set { dds = value; }
         }
 
+        public Bitmap Raw
+        {
+            get { return raw; }
+            set { raw = value; }
+        }
+
         public static BMAP Load(string path, bool bDump = false)
         {
             FileInfo fi = new FileInfo(path);
@@ -97,6 +103,10 @@ namespace breckFest
 
         public void Save(string path)
         {
+            // Wreckfest doesn't seem to support uncompressed files.
+            // This bool is just for eyeballing things
+            bool bCompress = true;
+
             using (var fw = new BinaryWriter(new FileStream(path, FileMode.Create)))
             {
                 fw.Write(4);
@@ -106,20 +116,28 @@ namespace breckFest
                 fw.Write((byte)0x62);
                 fw.Write(3);
 
-                var hashTable = new int[1 << (14 - 2)];
                 var input = this.getAllBytes();
-                var output = new byte[65535];
 
-                for (int i = 0; i < input.Length; i += output.Length)
+                if (bCompress)
                 {
-                    var chunk = new byte[Math.Min(input.Length - i, output.Length)];
-                    Array.Copy(input, i, chunk, 0, chunk.Length);
-                    Array.Clear(hashTable, 0, hashTable.Length);
+                    var hashTable = new int[1 << (14 - 2)];
+                    var output = new byte[65535];
 
-                    var size = LZ4Compress.Compress(hashTable, chunk, output, chunk.Length, chunk.Length);
+                    for (int i = 0; i < input.Length; i += output.Length)
+                    {
+                        var chunk = new byte[Math.Min(input.Length - i, output.Length)];
+                        Array.Copy(input, i, chunk, 0, chunk.Length);
+                        Array.Clear(hashTable, 0, hashTable.Length);
 
-                    fw.Write(size);
-                    fw.Write(output, 0, size);
+                        var size = LZ4Compress.Compress(hashTable, chunk, output, chunk.Length, chunk.Length);
+
+                        fw.Write(size);
+                        fw.Write(output, 0, size);
+                    }
+                }
+                else
+                {
+                    fw.Write(input);
                 }
             }
         }
@@ -157,24 +175,57 @@ namespace breckFest
 
         private byte[] getAllBytes()
         {
-            int ddsSize = 128;
+            byte[] b;
 
-            for (int i = 0; i < dds.MipMaps.Count; i++)
+            if (mode == 0)
             {
-                ddsSize += dds.MipMaps[i].Data.Length;
+                int ddsSize = 128;
+
+                for (int i = 0; i < dds.MipMaps.Count; i++)
+                {
+                    ddsSize += dds.MipMaps[i].Data.Length;
+                }
+
+                b = new byte[4 + 4 + path.Length + 4 + ddsSize];
+
+                using (MemoryStream ms = new MemoryStream(b))
+                using (BinaryWriter bw = new BinaryWriter(ms))
+                {
+                    bw.Write(mode);                 // 4
+                    bw.Write(path.Length);          // 4
+                    bw.Write(path.ToCharArray());   // path.length
+                    bw.Write(ddsSize);              // 4
+                    DDS.Save(bw, this.dds);         // ddsSize
+                }
             }
-
-            byte[] b = new byte[8 + path.Length + 4 + ddsSize];
-
-            using (MemoryStream ms = new MemoryStream(b))
-            using (BinaryWriter bw = new BinaryWriter(ms))
+            else
             {
-                bw.Write(0);
-                bw.Write(path.Length);
-                bw.Write(path.ToCharArray());
-                bw.Write(ddsSize);
+                int rawSize = 46 + (raw.Width * raw.Height * 4);
+                int offset = 0;
+                b = new byte[4 + 4 + path.Length + 4 + rawSize];
 
-                DDS.Save(bw, this.dds);
+                using (MemoryStream ms = new MemoryStream(b))
+                using (BinaryWriter bw = new BinaryWriter(ms))
+                {
+                    bw.Write(mode);                 // 4
+                    bw.Write(path.Length);          // 4
+                    bw.Write(path.ToCharArray());   // path.length
+                    bw.Write(rawSize);              // 4
+                    bw.Write((short)0x1c);
+                    bw.Write((short)0x02);
+                    bw.Write(0);
+                    bw.Write(0);
+                    bw.Write((short)raw.Width);
+                    bw.Write((short)raw.Height);
+                    bw.Write(" (Bugbear Entertainment Ltd. ".ToCharArray());
+                    bw.Write((byte)0);
+
+                    offset = (int)bw.BaseStream.Position;
+                }
+
+                BitmapData bmpdata = raw.LockBits(new Rectangle(0, 0, raw.Width, raw.Height), ImageLockMode.ReadOnly, raw.PixelFormat);
+                Marshal.Copy(bmpdata.Scan0, b, offset, bmpdata.Stride * bmpdata.Height);
+                raw.UnlockBits(bmpdata);
             }
 
             return b;
