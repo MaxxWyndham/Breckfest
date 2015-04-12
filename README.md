@@ -1,11 +1,11 @@
-**Breckfest v1.2.0**
+**Breckfest v1.3.0**
 
 ![alt text](http://www.toxic-ragers.co.uk/images/misc/breckfest.png "Breckfest")
 
 A drag'n'drop image converter for Wreckfest.
 
-v1.2.0 released 2015-04-09  
-Download binary [here](http://www.toxic-ragers.co.uk/files/tools/breckfest/Breckfest.v1.2.0.zip) (46.0KB)
+v1.3.0 released 2015-04-12  
+Download binary [here](http://www.toxic-ragers.co.uk/files/tools/breckfest/Breckfest.v1.3.0.zip) (46.5KB)
 
 Notes:  
 About as barebones as you can possibly get.  Enhancements and optimisations coming in future versions.
@@ -19,7 +19,16 @@ Doubleclicking Breckfest will process the current directory.
 
 \* Files are sorted alphabetically and only the first supported extension will be processed.  ie, if skin5_c5.bmap is processed Breckfest will ignore skin5_c5.png.  Or, put another way, BMAP > PNG will be prioritised over PNG > BMAP
 
+Commandline options:  
+-c[lutter] : Generates clutter bmaps  
+_Breckfest.exe -c "c:\path\to\file.png"_ will create clutter bmap file.x.bmap  
+_Breckfest.exe -clutter "c:\path\to\file.png"_ will do the same thing
+
 **Changelog**
+
+**v1.3.0**  
+Added -c[lutter] commandline option  
+Fixed red and blue channels becoming swapped when processing \menu\textures\ bmaps
 
 **v1.2.0**  
 Added directory support  
