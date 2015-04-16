@@ -68,6 +68,7 @@
     <Compile Include="Texture.cs" />
     <Compile Include="TGA.cs" />
     <Compile Include="TIF.cs" />
+    <Compile Include="Raw.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\LibSquishNet\LibSquishNet\LibSquishNet.csproj">

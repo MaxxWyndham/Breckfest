@@ -35,6 +35,10 @@ namespace breckFest
                                 settings.Clutter = true;
                                 break;
 
+                            case "-dump":
+                                settings.Raw = true;
+                                break;
+
                             case "-dxt1":
                                 settings.Format = D3DFormat.DXT1;
                                 break;
@@ -108,7 +112,17 @@ namespace breckFest
             BMAP bmap = new BMAP();
             string extension = Path.GetExtension(path).Substring(1);
 
-            if (extension == "bmap")
+            if (settings.Raw)
+            {
+                if (Raw.IsValid(path))
+                {
+                    Console.WriteLine("Loading  : {0}", Path.GetFileName(path));
+                    Raw.Load(path, true);
+
+                    return path;
+                }
+            }
+            else if (extension == "bmap")
             {
                 if (BMAP.IsBMAP(path))
                 {
@@ -210,12 +224,19 @@ namespace breckFest
     public class BreckfestSettings
     {
         bool clutter;
+        bool raw;
         D3DFormat format;
 
         public bool Clutter
         {
             get { return clutter; }
             set { clutter = value; }
+        }
+
+        public bool Raw
+        {
+            get { return raw; }
+            set { raw = value; }
         }
 
         public D3DFormat Format
@@ -227,6 +248,7 @@ namespace breckFest
         public BreckfestSettings()
         {
             this.clutter = false;
+            this.raw = false;
             this.format = D3DFormat.DXT5;
         }
     }
