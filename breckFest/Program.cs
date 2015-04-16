@@ -67,13 +67,19 @@ namespace breckFest
                     }
                 }
             }
+
+            if (suppliedPath != null)
+            {
+                processFolder(suppliedPath);
+            }
+            else if (suppliedFile != null)
+            {
+                processFile(suppliedFile);
+            }
             else
             {
-                suppliedPath = Environment.CurrentDirectory;
+                processFolder(Environment.CurrentDirectory);
             }
-
-            if (suppliedPath != null) { processFolder(suppliedPath); }
-            if (suppliedFile != null) { processFile(suppliedFile); }
         }
 
         private static void processFolder(string path)
@@ -82,7 +88,7 @@ namespace breckFest
 
             foreach (string file in Directory.GetFiles(path).OrderBy(f => f))
             {
-                if (processedFiles.Contains(Path.GetDirectoryName(path) + Path.GetFileNameWithoutExtension(file)))
+                if (processedFiles.Contains(Path.GetDirectoryName(path) + Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file))))
                 {
                     Console.WriteLine("Skipping : {0}", Path.GetFileName(file));
                     continue;
@@ -92,7 +98,7 @@ namespace breckFest
 
                 if (processed != null)
                 {
-                    processedFiles.Add(Path.GetDirectoryName(path) + Path.GetFileNameWithoutExtension(file));
+                    processedFiles.Add(Path.GetDirectoryName(path) + Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file)));
                 }
             }
         }
@@ -108,8 +114,11 @@ namespace breckFest
                 {
                     Console.WriteLine("Loading  : {0}", Path.GetFileName(path));
                     bmap = BMAP.Load(path, false);
-                    Console.WriteLine("Saving   : {0}", Path.GetFileName(path.Replace(".bmap", ".png")));
-                    bmap.SaveAsPNG(path.Replace(".bmap", ".png"));
+
+                    string outputName = string.Format("{0}.{1}.png", Path.GetFileNameWithoutExtension(path), (bmap.Mode == 1 ? "clutter" : (bmap.DDS.Format == D3DFormat.A8R8G8B8 ? "raw" : bmap.DDS.Format.ToString().ToLower())));
+
+                    Console.WriteLine("Saving   : {0}", outputName);
+                    bmap.SaveAsPNG(outputName);
 
                     return path;
                 }
@@ -127,7 +136,7 @@ namespace breckFest
             else if (Array.IndexOf(new string[] { "png", "tga", "tif" }, extension) > -1)
             {
                 Texture texture = null;
-                Console.WriteLine("Loading  : {0}", Path.GetFileName(path));
+                Console.WriteLine("Loading   : {0}", Path.GetFileName(path));
 
                 switch (extension)
                 {
@@ -144,11 +153,33 @@ namespace breckFest
                         break;
                 }
 
+                if (Path.GetFileNameWithoutExtension(path).EndsWith(".clutter", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.Clutter = true;
+                    path = path.Replace(".clutter", "");
+                }
+                else if (Path.GetFileNameWithoutExtension(path).EndsWith(".raw", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.Format = D3DFormat.A8R8G8B8;
+                    path = path.Replace(".raw", "");
+                }
+                else if (Path.GetFileNameWithoutExtension(path).EndsWith(".dxt1", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.Format = D3DFormat.DXT1;
+                    path = path.Replace(".dxt1", "");
+                }
+                else if (Path.GetFileNameWithoutExtension(path).EndsWith(".dxt5", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.Format = D3DFormat.DXT5;
+                    path = path.Replace(".dxt5", "");
+                }
+
                 bmap.Path = Path.GetFileName(path);
 
                 if (settings.Clutter)
                 {
-                    Console.WriteLine("Cluttering   : {0}x{1}", texture.Bitmap.Width, texture.Bitmap.Height);
+                    Console.WriteLine("Cluttering: {0}x{1}", texture.Bitmap.Width, texture.Bitmap.Height);
+
                     bmap.Mode = 1;
                     bmap.Raw = texture.Bitmap;
                 }
@@ -166,8 +197,8 @@ namespace breckFest
                     bmap.DDS = new DDS(settings.Format, texture.Bitmap);
                 }
 
-                Console.WriteLine("Saving   : {0}", Path.GetFileName(path.Replace(string.Format(".{0}", extension), ".bmap")));
-                bmap.Save(path.Replace(string.Format(".{0}", extension), ".x.bmap"));
+                Console.WriteLine("Saving    : {0}", Path.GetFileName(path.Replace(string.Format(".{0}", extension), ".bmap")));
+                bmap.Save(path.Replace(string.Format(".{0}", extension), ".x.bmap"), true);
 
                 return path;
             }

@@ -101,11 +101,10 @@ namespace breckFest
             return bmap;
         }
 
-        public void Save(string path)
+        public void Save(string path, bool bCompress = true)
         {
             // Wreckfest doesn't seem to support uncompressed files.
-            // This bool is just for eyeballing things
-            bool bCompress = true;
+            // bCompress is just for eyeballing things
 
             using (var fw = new BinaryWriter(new FileStream(path, FileMode.Create)))
             {
