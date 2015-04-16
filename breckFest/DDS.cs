@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
+using System.Runtime.InteropServices;
 
 using Squish;
 
@@ -174,10 +175,15 @@ namespace breckFest
 
         public DDS(D3DFormat Format, Bitmap bitmap)
         {
-            SquishFlags flags;
+            SquishFlags flags = SquishFlags.kDxt1;
+            bool bCompressed = true;
 
             switch (Format)
             {
+                case D3DFormat.DXT1:
+                    flags = SquishFlags.kDxt1;
+                    break;
+
                 case D3DFormat.DXT3:
                     flags = SquishFlags.kDxt3;
                     break;
@@ -187,7 +193,7 @@ namespace breckFest
                     break;
 
                 default:
-                    flags = SquishFlags.kDxt1;
+                    bCompressed = false;
                     break;
             }
 
@@ -200,25 +206,21 @@ namespace breckFest
             mip.Height = height;
 
             byte[] data = new byte[mip.Width * mip.Height * 4];
-            byte[] dest = new byte[Squish.Squish.GetStorageRequirements(mip.Width, mip.Height, flags | SquishFlags.kColourIterativeClusterFit | SquishFlags.kWeightColourByAlpha)];
 
-            int ii = 0;
-            for (int y = 0; y < mip.Height; y++)
+            BitmapData bmpdata = bitmap.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadOnly, bitmap.PixelFormat);
+            Marshal.Copy(bmpdata.Scan0, data, 0, bmpdata.Stride * bmpdata.Height);
+            bitmap.UnlockBits(bmpdata);
+
+            if (bCompressed)
             {
-                for (int x = 0; x < mip.Width; x++)
-                {
-                    var p = bitmap.GetPixel(x, y);
-                    data[ii + 0] = p.R;
-                    data[ii + 1] = p.G;
-                    data[ii + 2] = p.B;
-                    data[ii + 3] = p.A;
-
-                    ii += 4;
-                }
+                byte[] dest = new byte[Squish.Squish.GetStorageRequirements(mip.Width, mip.Height, flags | SquishFlags.kColourIterativeClusterFit | SquishFlags.kWeightColourByAlpha)];
+                Squish.Squish.CompressImage(data, mip.Width, mip.Height, ref dest, flags | SquishFlags.kColourIterativeClusterFit | SquishFlags.kWeightColourByAlpha);
+                mip.Data = dest;
             }
-
-            Squish.Squish.CompressImage(data, mip.Width, mip.Height, ref dest, flags | SquishFlags.kColourIterativeClusterFit | SquishFlags.kWeightColourByAlpha);
-            mip.Data = dest;
+            else
+            {
+                mip.Data = data;
+            }
 
             mipMaps.Add(mip);
         }
@@ -321,13 +323,15 @@ namespace breckFest
 
         public static void Save(BinaryWriter bw, DDS dds)
         {
+            Flags flags = (Flags.Caps | Flags.Height | Flags.Width | Flags.PixelFormat | Flags.MipMapCount);
+            flags |= (dds.format == D3DFormat.A8R8G8B8 ? Flags.Pitch : Flags.LinearSize);
+
             bw.Write(new byte[] { 0x44, 0x44, 0x53, 0x20 });    // 'DDS '
             bw.Write(124);
-            bw.Write((int)(Flags.Caps | Flags.Height | Flags.Width | Flags.PixelFormat | Flags.LinearSize));
-
+            bw.Write((int)flags);
             bw.Write(dds.Height);
             bw.Write(dds.Width);
-            bw.Write(dds.MipMaps[0].Data.Length);
+            bw.Write((flags.HasFlag(Flags.Pitch) ? dds.width * 4 : dds.MipMaps[0].Data.Length));
             bw.Write(dds.Depth);
             bw.Write(dds.MipMaps.Count);
 
@@ -335,30 +339,37 @@ namespace breckFest
 
             // PixelFormat
             bw.Write(32);
+
             switch (dds.Format)
             {
                 case D3DFormat.DXT1:
                 case D3DFormat.DXT3:
                 case D3DFormat.DXT5:
-                    bw.Write(4);
+                    bw.Write(4);        // fourCC length
+                    bw.Write(dds.Format.ToString().ToCharArray());
+                    bw.Write(0);
+                    bw.Write(0);
+                    bw.Write(0);
+                    bw.Write(0);
+                    bw.Write(0);
                     break;
 
                 default:
+                    bw.Write(0);    // fourCC length
                     bw.Write(0);
+                    bw.Write(32);   //  RGB bit count
+                    bw.Write(255 << 16);    // R mask
+                    bw.Write(255 << 8);     // G mask
+                    bw.Write(255 << 0);     // B mask
+                    bw.Write(255 << 24);    // A mask
                     break;
             }
-            bw.Write(dds.Format.ToString().ToCharArray());
-            bw.Write(0);
-            bw.Write(0);
-            bw.Write(0);
-            bw.Write(0);
-            bw.Write(0);
 
-            bw.Write(4096);
-            bw.Write(0);
-            bw.Write(0);
-            bw.Write(0);
-            bw.Write(0);
+            bw.Write((int)DDSCaps.DDSCAPS_TEXTURE);
+            bw.Write(0);    // Caps 2
+            bw.Write(0);    // Caps 3
+            bw.Write(0);    // Caps 4
+            bw.Write(0);    // Reserved
 
             for (int i = 0; i < dds.mipMaps.Count; i++)
             {

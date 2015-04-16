@@ -35,6 +35,18 @@ namespace breckFest
                                 settings.Clutter = true;
                                 break;
 
+                            case "-dxt1":
+                                settings.Format = D3DFormat.DXT1;
+                                break;
+
+                            case "-dxt5":
+                                settings.Format = D3DFormat.DXT5;
+                                break;
+
+                            case "-raw":
+                                settings.Format = D3DFormat.A8R8G8B8;
+                                break;
+
                             default:
                                 Console.WriteLine("Unknown argument: {0}", s);
                                 return;
@@ -142,8 +154,16 @@ namespace breckFest
                 }
                 else
                 {
-                    Console.WriteLine("Squishing: {0}x{1} (this might take awhile)", texture.Bitmap.Width, texture.Bitmap.Height);
-                    bmap.DDS = new DDS(D3DFormat.DXT5, texture.Bitmap);
+                    if (settings.Format == D3DFormat.A8R8G8B8)
+                    {
+                        Console.WriteLine("Formatting: {0}x{1} (this might take awhile)", texture.Bitmap.Width, texture.Bitmap.Height);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Squishing : {0}x{1} (this might take awhile)", texture.Bitmap.Width, texture.Bitmap.Height);
+                    }
+
+                    bmap.DDS = new DDS(settings.Format, texture.Bitmap);
                 }
 
                 Console.WriteLine("Saving   : {0}", Path.GetFileName(path.Replace(string.Format(".{0}", extension), ".bmap")));
@@ -159,6 +179,7 @@ namespace breckFest
     public class BreckfestSettings
     {
         bool clutter;
+        D3DFormat format;
 
         public bool Clutter
         {
@@ -166,9 +187,16 @@ namespace breckFest
             set { clutter = value; }
         }
 
+        public D3DFormat Format
+        {
+            get { return format; }
+            set { format = value; }
+        }
+
         public BreckfestSettings()
         {
             this.clutter = false;
+            this.format = D3DFormat.DXT5;
         }
     }
 }
