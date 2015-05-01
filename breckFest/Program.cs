@@ -35,6 +35,11 @@ namespace breckFest
                                 settings.Clutter = true;
                                 break;
 
+                            case "-force":
+                            case "-f":
+                                settings.ForceOverwrite = true;
+                                break;
+
                             case "-dump":
                                 settings.Raw = true;
                                 break;
@@ -111,6 +116,7 @@ namespace breckFest
         {
             BMAP bmap = new BMAP();
             string extension = Path.GetExtension(path).Substring(1);
+            string outputName = "";
 
             if (settings.Raw)
             {
@@ -129,9 +135,10 @@ namespace breckFest
                     Console.WriteLine("Loading  : {0}", Path.GetFileName(path));
                     bmap = BMAP.Load(path, false);
 
-                    string outputName = string.Format("{0}.{1}.png", Path.GetFileNameWithoutExtension(path), (bmap.Mode == 1 ? "clutter" : (bmap.DDS.Format == D3DFormat.A8R8G8B8 ? "raw" : bmap.DDS.Format.ToString().ToLower())));
+                    outputName = string.Format("{0}.{1}.png", Path.GetFileNameWithoutExtension(path), (bmap.Mode == 1 ? "clutter" : (bmap.DDS.Format == D3DFormat.A8R8G8B8 ? "raw" : bmap.DDS.Format.ToString().ToLower())));
 
                     Console.WriteLine("Saving   : {0}", outputName);
+                    if (!Overwrite(string.Format(@"{0}\{1}", Path.GetDirectoryName(path), outputName))) { return null; }
                     bmap.SaveAsPNG(outputName);
 
                     return path;
@@ -219,6 +226,42 @@ namespace breckFest
 
             return null;
         }
+
+        private static bool Overwrite(string path)
+        {
+            if (!File.Exists(path))
+            {
+                return true;
+            }
+            else
+            {
+                if (!settings.ForceOverwrite)
+                {
+                    Console.WriteLine("Warning  : {0} already exists.", path);
+                    Console.WriteLine("Overwrite?");
+
+                    while (true)
+                    {
+                        ConsoleKey key = Console.ReadKey(true).Key;
+
+                        if (key == ConsoleKey.N)
+                        {
+                            Console.WriteLine("N");
+                            return false;
+                        }
+                        else if (key == ConsoleKey.Y)
+                        {
+                            Console.WriteLine("Y");
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
     }
 
     public class BreckfestSettings
@@ -226,6 +269,7 @@ namespace breckFest
         bool clutter;
         bool raw;
         D3DFormat format;
+        bool force;
 
         public bool Clutter
         {
@@ -245,10 +289,17 @@ namespace breckFest
             set { format = value; }
         }
 
+        public bool ForceOverwrite
+        {
+            get { return force; }
+            set { force = value; }
+        }
+
         public BreckfestSettings()
         {
             this.clutter = false;
             this.raw = false;
+            this.force = false;
             this.format = D3DFormat.DXT5;
         }
     }
