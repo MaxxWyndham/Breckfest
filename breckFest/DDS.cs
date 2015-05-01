@@ -213,6 +213,13 @@ namespace breckFest
 
             if (bCompressed)
             {
+                for (uint i = 0; i < data.Length - 4; i += 4)
+                {
+                    byte r = data[i + 0];
+                    data[i + 0] = data[i + 2];
+                    data[i + 2] = r;
+                }
+
                 byte[] dest = new byte[Squish.Squish.GetStorageRequirements(mip.Width, mip.Height, flags | SquishFlags.kColourIterativeClusterFit | SquishFlags.kWeightColourByAlpha)];
                 Squish.Squish.CompressImage(data, mip.Width, mip.Height, ref dest, flags | SquishFlags.kColourIterativeClusterFit | SquishFlags.kWeightColourByAlpha);
                 mip.Data = dest;
@@ -430,7 +437,7 @@ namespace breckFest
                 }
             }
 
-            var bmpdata = b.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadWrite, (bSuppressAlpha ? PixelFormat.Format32bppArgb : b.PixelFormat));
+            var bmpdata = b.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadWrite, (bSuppressAlpha ? PixelFormat.Format32bppRgb : b.PixelFormat));
             System.Runtime.InteropServices.Marshal.Copy(dest, 0, bmpdata.Scan0, dest.Length);
             b.UnlockBits(bmpdata);
 
