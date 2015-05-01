@@ -232,7 +232,10 @@ namespace breckFest
         _last_literals:
             var lastRun = (src_end - anchor);
 
-            if (op + lastRun + 1 + ((lastRun + 255 - RUN_MASK) / 255) > olimit) return 0;
+            if (op + lastRun + 1 + ((lastRun + 255 - RUN_MASK) / 255) > olimit)
+            {
+                return 0;
+            }
 
             if (lastRun >= RUN_MASK)
             {
@@ -246,6 +249,18 @@ namespace breckFest
             op += src_end - anchor;
 
             return op;
+        }
+
+        public static int CalculateChunkSize(int length)
+        {
+            int chunkSize = 65535;
+
+            while (length % chunkSize > 0 && length % chunkSize < 255)
+            {
+                chunkSize--;
+            }
+
+            return chunkSize;
         }
 
         private static uint LookInt32(byte[] buffer, int offset)
@@ -266,7 +281,7 @@ namespace breckFest
             return true;
         }
 
-        public static bool CompareInt32(byte[] buffer, int a, int b)
+        private static bool CompareInt32(byte[] buffer, int a, int b)
         {
             if (a < 0 || a > buffer.Length || b < 0 || b > buffer.Length)
             {

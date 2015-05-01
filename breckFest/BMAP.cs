@@ -120,18 +120,22 @@ namespace breckFest
                 if (bCompress)
                 {
                     var hashTable = new int[1 << (14 - 2)];
-                    var output = new byte[65535];
+                    var output = new byte[LZ4Compress.CalculateChunkSize(input.Length)];
+                    int i = 0;
 
-                    for (int i = 0; i < input.Length; i += output.Length)
+                    while (i < input.Length)
                     {
-                        var chunk = new byte[Math.Min(input.Length - i, output.Length)];
+                        byte[] chunk = new byte[Math.Min(input.Length - i, output.Length)];
+
                         Array.Copy(input, i, chunk, 0, chunk.Length);
                         Array.Clear(hashTable, 0, hashTable.Length);
 
-                        var size = LZ4Compress.Compress(hashTable, chunk, output, chunk.Length, chunk.Length);
+                        int size = LZ4Compress.Compress(hashTable, chunk, output, chunk.Length, chunk.Length + 4);
 
                         fw.Write(size);
                         fw.Write(output, 0, size);
+
+                        i += chunk.Length;
                     }
                 }
                 else
