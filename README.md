@@ -1,11 +1,11 @@
-**Breckfest v1.3.0**
+**Breckfest v1.4.0**
 
 ![alt text](http://www.toxic-ragers.co.uk/images/misc/breckfest.png "Breckfest")
 
 A drag'n'drop image converter for Wreckfest.
 
-v1.3.0 released 2015-04-12  
-Download binary [here](http://www.toxic-ragers.co.uk/files/tools/breckfest/Breckfest.v1.3.0.zip) (46.5KB)
+v1.4.0 released 2015-05-01  
+Download binary [here](http://www.toxic-ragers.co.uk/files/tools/breckfest/Breckfest.v1.4.0.zip) (47.9KB)
 
 Notes:  
 About as barebones as you can possibly get.  Enhancements and optimisations coming in future versions.
@@ -21,10 +21,28 @@ Doubleclicking Breckfest will process the current directory.
 
 Commandline options:  
 -c[lutter] : Generates clutter bmaps  
+-dxt1 : Compresses using DXT1 compression  
+-dxt5 : Compresses using DXT5 compression  
+-raw : No compression  
+-f[orce] : Breckfest will automatically overwrite files  
+-dump : Decompresses any valid Wreckfest compressed file  
 _Breckfest.exe -c "c:\path\to\file.png"_ will create clutter bmap file.x.bmap  
 _Breckfest.exe -clutter "c:\path\to\file.png"_ will do the same thing
 
+Filename options:  
+Filename.clutter.png will be processed as -clutter and saved as Filename.x.bmap  
+Filename.dxt1.png will be processed as -dxt1 and saved as Filename.x.bmap  
+Filename.dxt5.png will be processed as -dxt5 and saved as Filename.x.bmap  
+And so on
+
 **Changelog**
+
+**v1.4.0**  
+Breckfest no longer overwrites files automatically  
+Added -f[orce] commandline option to force Breckfest to overwrite files automatically  
+Added -dump commandline option  
+Added -raw, -dxt1 and -dxt5 commandline options  
+Added support for "options within the filename"
 
 **v1.3.0**  
 Added -c[lutter] commandline option  
