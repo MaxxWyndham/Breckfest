@@ -99,7 +99,7 @@ namespace breckFest
 
         static void Main(string[] args)
         {
-            Version version = new Version(1, 4, 0);
+            Version version = new Version(1, 5, 0);
 
             Dictionary<string, string> commands = new Dictionary<string, string>();
 

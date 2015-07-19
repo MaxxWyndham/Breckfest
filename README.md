@@ -1,11 +1,11 @@
-**Breckfest v1.4.0**
+**Breckfest v1.5.0**
 
 ![alt text](http://www.toxic-ragers.co.uk/images/misc/breckfest.png "Breckfest")
 
 A drag'n'drop image converter for Wreckfest.
 
-v1.4.0 released 2015-05-01  
-Download binary [here](http://www.toxic-ragers.co.uk/files/tools/breckfest/Breckfest.v1.4.0.zip) (47.9KB)
+v1.5.0 released 2015-07-19  
+Download binary [here](http://www.toxic-ragers.co.uk/files/tools/breckfest/Breckfest.v1.5.0.zip) (49.1KB)
 
 Notes:  
 About as barebones as you can possibly get.  Enhancements and optimisations coming in future versions.
@@ -26,6 +26,7 @@ Commandline options:
 -raw : No compression  
 -f[orce] : Breckfest will automatically overwrite files  
 -dump : Decompresses any valid Wreckfest compressed file  
+-compress : Compresses any valid Wreckfest decompressed file  
 _Breckfest.exe -c "c:\path\to\file.png"_ will create clutter bmap file.x.bmap  
 _Breckfest.exe -clutter "c:\path\to\file.png"_ will do the same thing
 
@@ -36,6 +37,10 @@ Filename.dxt5.png will be processed as -dxt5 and saved as Filename.x.bmap
 And so on
 
 **Changelog**
+
+**v1.5.0**  
+Added -compress commandline option  
+Fixed "options within the filename" carrying across multiple files
 
 **v1.4.0**  
 Breckfest no longer overwrites files automatically  
