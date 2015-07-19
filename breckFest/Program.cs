@@ -103,7 +103,6 @@ namespace breckFest
 
             Dictionary<string, string> commands = new Dictionary<string, string>();
 
-            string lastCommand;
             string suppliedPath = null;
             string suppliedFile = null;
 
@@ -155,8 +154,6 @@ namespace breckFest
                     }
                     else
                     {
-                        lastCommand = "";
-
                         if (File.Exists(s))
                         {
                             suppliedFile = s;
@@ -327,6 +324,8 @@ namespace breckFest
                         break;
                 }
 
+                BreckfestSettings original = settings.Clone();
+
                 if (Path.GetFileNameWithoutExtension(path).EndsWith(".clutter", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.Clutter = true;
@@ -373,6 +372,8 @@ namespace breckFest
 
                 Console.WriteLine("Saving    : {0}", Path.GetFileName(path.Replace(string.Format(".{0}", extension), ".bmap")));
                 bmap.Save(path.Replace(string.Format(".{0}", extension), ".x.bmap"), true);
+
+                settings = original.Clone();
 
                 return path;
             }
@@ -461,6 +462,18 @@ namespace breckFest
             this.raw = false;
             this.force = false;
             this.format = D3DFormat.DXT5;
+        }
+
+        public BreckfestSettings Clone()
+        {
+            return new BreckfestSettings
+            {
+                clutter = this.clutter,
+                raw = this.raw,
+                compress = this.compress,
+                force = this.force,
+                format = this.format
+            };
         }
     }
 }
