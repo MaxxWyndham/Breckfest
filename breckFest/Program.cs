@@ -5,6 +5,94 @@ using System.Linq;
 
 namespace breckFest
 {
+    public enum WreckfestExtensions
+    {
+        agan = 1,
+        agen = 0,
+        aist = 0,
+        apbl = 0,
+        bmap = 3,
+        ccms = 0,
+        ccps = 0,
+        ccrs = 0,
+        clgs = 0,
+        clhe = 1,
+        clmx = 0,
+        cwea = 0,
+        dcty = 0,
+        dfsc = 3,
+        dmsd = 0,
+        dntp = 1,
+        dset = 4,
+        enga = 3,
+        engs = 6,
+        evss = 0,
+        fnts = 1,
+        fxac = 1,
+        fxaf = 0,
+        fxbl = 0,
+        fxbp = 0,
+        fxcn = 0,
+        fxdf = 0,
+        fxlf = 0,
+        fxpm = 0,
+        fxsf = 0,
+        fxss = 0,
+        fxtg = 0,
+        fxtr = 0,
+        gmpl = 0xd,
+        grge = 3,
+        irsu = 0,
+        jobs = 0,
+        jodb = 0,
+        jofi = 0,
+        johi = 0,
+        jopi = 0,
+        joun = 0,
+        mchc = 0,
+        panl = 4,
+        prfb = 0,
+        rlao = 0,
+        rlod = 0,
+        scne = 8,
+        srfl = 0,
+        surs = 1,
+        tcat = 2,
+        teli = 0,
+        teno = 2,
+        upgb = 0,
+        upgr = 0xd,
+        upss = 1,
+        vail = 0,
+        vdst = 0,
+        vean = 2,
+        vebr = 1,
+        vech = 3,
+        vedi = 3,
+        veen = 8,
+        vees = 1,
+        vege = 3,
+        vehi = 5,
+        vesh = 1,
+        vest = 4,
+        vesu = 5,
+        veti = 7,
+        vetr = 0,
+        vhae = 0,
+        vhcl = 2,
+        vhcp = 0,
+        vpdl = 0,
+        vpdp = 0,
+        vpdr = 1,
+        vpst = 2,
+        vsbd = 2,
+        vsbp = 1,
+        vsks = 1,
+        vstd = 1,
+        weat = 3,
+        weli = 0
+    }
+
     class Program
     {
         static BreckfestSettings settings = new BreckfestSettings();
@@ -42,6 +130,10 @@ namespace breckFest
 
                             case "-dump":
                                 settings.Raw = true;
+                                break;
+
+                            case "-compress":
+                                settings.Compress = true;
                                 break;
 
                             case "-dxt1":
@@ -126,6 +218,67 @@ namespace breckFest
                     Raw.Load(path, true);
 
                     return path;
+                }
+            }
+            else if (settings.Compress)
+            {
+                WreckfestExtensions we;
+
+                if (Enum.TryParse<WreckfestExtensions>(extension, out we))
+                {
+                    using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(path)))
+                    using (BinaryReader br = new BinaryReader(ms))
+                    {
+                        if (
+                            br.ReadInt32() != 4 ||
+                            br.ReadByte() != extension[3] ||
+                            br.ReadByte() != extension[2] ||
+                            br.ReadByte() != extension[1] ||
+                            br.ReadByte() != extension[0])
+                        {
+                            br.BaseStream.Position = 0;
+                            var input = br.ReadBytes((int)ms.Length);
+
+                            File.Move(path, path + ".bak");
+
+                            using (BinaryWriter bw = new BinaryWriter(new FileStream(path, FileMode.Create)))
+                            {
+                                bw.Write(4);
+                                bw.Write(extension[3]);
+                                bw.Write(extension[2]);
+                                bw.Write(extension[1]);
+                                bw.Write(extension[0]);
+                                bw.Write((int)we);
+                                
+                                var hashTable = new int[1 << (14 - 2)];
+                                var output = new byte[LZ4Compress.CalculateChunkSize(input.Length)];
+                                int i = 0;
+
+                                while (i < input.Length)
+                                {
+                                    byte[] chunk = new byte[Math.Min(input.Length - i, output.Length)];
+
+                                    Array.Copy(input, i, chunk, 0, chunk.Length);
+                                    Array.Clear(hashTable, 0, hashTable.Length);
+
+                                    int size = LZ4Compress.Compress(hashTable, chunk, output, chunk.Length, chunk.Length + 4);
+
+                                    bw.Write(size);
+                                    bw.Write(output, 0, size);
+
+                                    i += chunk.Length;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine("Skipping : {0} is already compressed", Path.GetFileName(path));
+                        }
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Error    : unsupported extension '{0}'.", extension);
                 }
             }
             else if (extension == "bmap")
@@ -268,6 +421,7 @@ namespace breckFest
     {
         bool clutter;
         bool raw;
+        bool compress;
         D3DFormat format;
         bool force;
 
@@ -281,6 +435,12 @@ namespace breckFest
         {
             get { return raw; }
             set { raw = value; }
+        }
+
+        public bool Compress
+        {
+            get { return compress; }
+            set { compress = value; }
         }
 
         public D3DFormat Format
