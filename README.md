@@ -10,6 +10,9 @@ Download binary [here](http://www.toxic-ragers.co.uk/files/tools/breckfest/Breck
 Notes:  
 About as barebones as you can possibly get.  Enhancements and optimisations coming in future versions.
 
+Dependencies:
+LibSquishNet - https://github.com/MaxxWyndham/LibSquishNet
+
 How to use:  
 Drop a bmap on Breckfest.exe to get a png file.  
 Drop a png (dds, tga and tif also supported) on Breckfest.exe to get a bmap file.  
@@ -26,7 +29,8 @@ Commandline options:
 -raw : No compression  
 -f[orce] : Breckfest will automatically overwrite files  
 -dump : Decompresses any valid Wreckfest compressed file  
--compress : Compresses any valid Wreckfest decompressed file  
+-compress : Compresses any valid Wreckfest decompressed file
+-norename : does not save the file 
 _Breckfest.exe -c "c:\path\to\file.png"_ will create clutter bmap file.x.bmap  
 _Breckfest.exe -clutter "c:\path\to\file.png"_ will do the same thing
 
@@ -37,6 +41,9 @@ Filename.dxt5.png will be processed as -dxt5 and saved as Filename.x.bmap
 And so on
 
 **Changelog**
+**v1.5.1**  
+Added -norename and -nr commandline option
+Added Overrite checks for bmap conversions 
 
 **v1.5.0**  
 Added -compress commandline option  

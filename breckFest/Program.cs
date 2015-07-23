@@ -99,7 +99,7 @@ namespace breckFest
 
         static void Main(string[] args)
         {
-            Version version = new Version(1, 5, 0);
+            Version version = new Version(1, 5, 1);
 
             Dictionary<string, string> commands = new Dictionary<string, string>();
 
@@ -145,6 +145,10 @@ namespace breckFest
 
                             case "-raw":
                                 settings.Format = D3DFormat.A8R8G8B8;
+                                break;
+                            case "-norename":
+                            case "-nr":
+                                settings.NoRename = true;
                                 break;
 
                             default:
@@ -288,7 +292,7 @@ namespace breckFest
                     outputName = string.Format("{0}.{1}.png", Path.GetFileNameWithoutExtension(path), (bmap.Mode == 1 ? "clutter" : (bmap.DDS.Format == D3DFormat.A8R8G8B8 ? "raw" : bmap.DDS.Format.ToString().ToLower())));
 
                     Console.WriteLine("Saving   : {0}", outputName);
-                    if (!Overwrite(string.Format(@"{0}\{1}", Path.GetDirectoryName(path), outputName))) { return null; }
+                    if (!Overwrite(Path.GetFullPath(path.Replace(Path.GetFileName(path), outputName)))) { return null; }
                     bmap.SaveAsPNG(outputName);
 
                     return path;
@@ -299,8 +303,20 @@ namespace breckFest
                 Console.WriteLine("Loading  : {0}", Path.GetFileName(path));
                 bmap.Path = Path.GetFileName(path);
                 bmap.DDS = DDS.Load(path);
-                Console.WriteLine("Saving   : {0}", Path.GetFileName(path.Replace(".dds", ".bmap")));
-                bmap.Save(path.Replace(".dds", ".x.bmap"));
+
+                if (!settings.NoRename)
+                {
+
+                    if (!Overwrite(Path.GetFullPath(path.Replace(".dds", ".x.bmap")))) { return null; }
+                    Console.WriteLine("Saving   : {0}", Path.GetFileName(path.Replace(".dds", ".x.bmap")));
+                    bmap.Save(path.Replace(".dds", ".x.bmap"));
+                }
+                else
+                {
+                    if (!Overwrite(Path.GetFullPath(path.Replace(".dds", ".bmap")))) { return null; }
+                    Console.WriteLine("Saving   : {0}", Path.GetFileName(path.Replace(".dds", ".bmap")));
+                    bmap.Save(path.Replace(".dds", ".bmap"));
+                }
 
                 return path;
             }
@@ -370,9 +386,20 @@ namespace breckFest
                     bmap.DDS = new DDS(settings.Format, texture.Bitmap);
                 }
 
-                Console.WriteLine("Saving    : {0}", Path.GetFileName(path.Replace(string.Format(".{0}", extension), ".bmap")));
-                bmap.Save(path.Replace(string.Format(".{0}", extension), ".x.bmap"), true);
+                if (!settings.NoRename)
+                {
 
+                    if (!Overwrite(Path.GetFullPath(path.Replace(string.Format(".{0}", extension), ".x.bmap")))) { return null; }
+                    Console.WriteLine("Saving    : {0}", Path.GetFileName(path.Replace(string.Format(".{0}", extension), ".x.bmap")));
+
+                    bmap.Save(path.Replace(string.Format(".{0}", extension), ".x.bmap"), true);
+                }
+                else
+                {
+                    if (!Overwrite(Path.GetFullPath(path.Replace(string.Format(".{0}", extension), ".bmap")))) { return null; }
+                    Console.WriteLine("Saving    : {0}", Path.GetFileName(path.Replace(string.Format(".{0}", extension), ".bmap")));
+                    bmap.Save(path.Replace(string.Format(".{0}", extension), ".bmap"), true);
+                }
                 settings = original.Clone();
 
                 return path;
@@ -425,6 +452,7 @@ namespace breckFest
         bool compress;
         D3DFormat format;
         bool force;
+        bool norename;
 
         public bool Clutter
         {
@@ -456,11 +484,18 @@ namespace breckFest
             set { force = value; }
         }
 
+        public bool NoRename
+        {
+            get { return norename; }
+            set { norename = value; }
+        }
+
         public BreckfestSettings()
         {
             this.clutter = false;
             this.raw = false;
             this.force = false;
+            this.norename = false;
             this.format = D3DFormat.DXT5;
         }
 
