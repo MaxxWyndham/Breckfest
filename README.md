@@ -1,4 +1,4 @@
-**Breckfest v1.5.0**
+**Breckfest v1.5.1**
 
 ![alt text](http://www.toxic-ragers.co.uk/images/misc/breckfest.png "Breckfest")
 
@@ -11,6 +11,7 @@ Notes:
 About as barebones as you can possibly get.  Enhancements and optimisations coming in future versions.
 
 Dependencies:
+
 LibSquishNet - https://github.com/MaxxWyndham/LibSquishNet
 
 How to use:  
@@ -41,6 +42,7 @@ Filename.dxt5.png will be processed as -dxt5 and saved as Filename.x.bmap
 And so on
 
 **Changelog**
+
 **v1.5.1**  
 Added -norename and -nr commandline option
 Added Overrite checks for bmap conversions 
