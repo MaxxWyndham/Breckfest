@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 
 namespace breckFest
 {
@@ -9,7 +8,7 @@ namespace breckFest
         {
             if (length == 0) { return null; }
 
-            var c = br.ReadChars(length);
+            char[] c = br.ReadChars(length);
             int l = length;
 
             for (int i = 0; i < length; i++)
@@ -27,7 +26,7 @@ namespace breckFest
         public static string ReadNullTerminatedString(this BinaryReader br)
         {
             string r = "";
-            char c = (char)0;
+            char c;
 
             do
             {

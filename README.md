@@ -1,14 +1,11 @@
-**Breckfest v1.5.0**
+**Breckfest v1.6.0**
 
 ![alt text](http://www.toxic-ragers.co.uk/images/misc/breckfest.png "Breckfest")
 
 A drag'n'drop image converter for Wreckfest.
 
-v1.5.0 released 2015-07-19  
-Download binary [here](http://www.toxic-ragers.co.uk/files/tools/breckfest/Breckfest.v1.5.0.zip) (49.1KB)
-
-Notes:  
-About as barebones as you can possibly get.  Enhancements and optimisations coming in future versions.
+v1.6.0 released 2021-05-21  
+Download binary [here](https://www.toxic-ragers.co.uk/files/tools/breckfest/Breckfest.v1.6.0.zip) (35.1KB)
 
 How to use:  
 Drop a bmap on Breckfest.exe to get a png file.  
@@ -27,6 +24,9 @@ Commandline options:
 -f[orce] : Breckfest will automatically overwrite files  
 -dump : Decompresses any valid Wreckfest compressed file  
 -compress : Compresses any valid Wreckfest decompressed file  
+-norename : Prevent Breckfest from adding the ".x" (danger!  this combined with -force is a dangerous combination)
+-png : Completely unnecessary command to tell Breckfest to convert bmap to png
+-dds : Don't output png files, write dds files instead
 _Breckfest.exe -c "c:\path\to\file.png"_ will create clutter bmap file.x.bmap  
 _Breckfest.exe -clutter "c:\path\to\file.png"_ will do the same thing
 
@@ -37,6 +37,14 @@ Filename.dxt5.png will be processed as -dxt5 and saved as Filename.x.bmap
 And so on
 
 **Changelog**
+
+**v1.6.0**
+Added -norename based on work by [talberti](https://github.com/talberti)  
+Added -dds  
+Updated LibSquishNet to the super speedy v2.0.0  
+Increased maximum supported image size to 16384x16384  
+Added license information for the partial port of the LZ4 compression algorithm  
+Code-styles
 
 **v1.5.0**  
 Added -compress commandline option  

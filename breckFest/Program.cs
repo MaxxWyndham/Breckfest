@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace breckFest
 {
@@ -93,20 +94,24 @@ namespace breckFest
         weli = 0
     }
 
+    public enum OutputFormat
+    {
+        PNG,
+        DDS
+    }
+
     class Program
     {
         static BreckfestSettings settings = new BreckfestSettings();
 
         static void Main(string[] args)
         {
-            Version version = new Version(1, 5, 0);
-
-            Dictionary<string, string> commands = new Dictionary<string, string>();
+            Version version = Assembly.GetExecutingAssembly().GetName().Version;
 
             string suppliedPath = null;
             string suppliedFile = null;
 
-            Console.WriteLine("Breckfest v{0}.{1}.{2}", version.Major, version.Minor, version.Build);
+            Console.WriteLine($"Breckfest v{version.Major}.{version.Minor}.{version.Build}");
 
             if (args.Length > 0)
             {
@@ -147,8 +152,21 @@ namespace breckFest
                                 settings.Format = D3DFormat.A8R8G8B8;
                                 break;
 
+                            case "-png":
+                                settings.SaveAs = OutputFormat.PNG;
+                                break;
+
+                            case "-dds":
+                                settings.SaveAs = OutputFormat.DDS;
+                                break;
+
+                            case "-norename":
+                            case "-nr":
+                                settings.NoRename = true;
+                                break;
+
                             default:
-                                Console.WriteLine("Unknown argument: {0}", s);
+                                Console.WriteLine($"Unknown argument: {s}");
                                 return;
                         }
                     }
@@ -188,7 +206,7 @@ namespace breckFest
             {
                 if (processedFiles.Contains(Path.GetDirectoryName(path) + Path.GetFileNameWithoutExtension(Path.GetFileNameWithoutExtension(file))))
                 {
-                    Console.WriteLine("Skipping : {0}", Path.GetFileName(file));
+                    Console.WriteLine($"Skipping : {Path.GetFileName(file)}");
                     continue;
                 }
 
@@ -205,13 +223,13 @@ namespace breckFest
         {
             BMAP bmap = new BMAP();
             string extension = Path.GetExtension(path).Substring(1);
-            string outputName = "";
+            string outputName;
 
             if (settings.Raw)
             {
                 if (Raw.IsValid(path))
                 {
-                    Console.WriteLine("Loading  : {0}", Path.GetFileName(path));
+                    Console.WriteLine($"Loading  : {Path.GetFileName(path)}");
                     Raw.Load(path, true);
 
                     return path;
@@ -219,9 +237,7 @@ namespace breckFest
             }
             else if (settings.Compress)
             {
-                WreckfestExtensions we;
-
-                if (Enum.TryParse<WreckfestExtensions>(extension, out we))
+                if (Enum.TryParse(extension, out WreckfestExtensions we))
                 {
                     using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(path)))
                     using (BinaryReader br = new BinaryReader(ms))
@@ -234,9 +250,9 @@ namespace breckFest
                             br.ReadByte() != extension[0])
                         {
                             br.BaseStream.Position = 0;
-                            var input = br.ReadBytes((int)ms.Length);
+                            byte[] input = br.ReadBytes((int)ms.Length);
 
-                            File.Move(path, path + ".bak");
+                            File.Move(path, $"{path}.bak");
 
                             using (BinaryWriter bw = new BinaryWriter(new FileStream(path, FileMode.Create)))
                             {
@@ -246,9 +262,9 @@ namespace breckFest
                                 bw.Write(extension[1]);
                                 bw.Write(extension[0]);
                                 bw.Write((int)we);
-                                
-                                var hashTable = new int[1 << (14 - 2)];
-                                var output = new byte[LZ4Compress.CalculateChunkSize(input.Length)];
+
+                                int[] hashTable = new int[1 << (14 - 2)];
+                                byte[] output = new byte[LZ4Compress.CalculateChunkSize(input.Length)];
                                 int i = 0;
 
                                 while (i < input.Length)
@@ -269,58 +285,59 @@ namespace breckFest
                         }
                         else
                         {
-                            Console.WriteLine("Skipping : {0} is already compressed", Path.GetFileName(path));
+                            Console.WriteLine($"Skipping : {Path.GetFileName(path)} is already compressed");
                         }
                     }
                 }
                 else
                 {
-                    Console.WriteLine("Error    : unsupported extension '{0}'.", extension);
+                    Console.WriteLine($"Error    : unsupported extension '{extension}'.");
                 }
             }
             else if (extension == "bmap")
             {
                 if (BMAP.IsBMAP(path))
                 {
-                    Console.WriteLine("Loading  : {0}", Path.GetFileName(path));
+                    Console.WriteLine($"Loading  : {Path.GetFileName(path)}");
                     bmap = BMAP.Load(path, false);
 
-                    outputName = string.Format("{0}.{1}.png", Path.GetFileNameWithoutExtension(path), (bmap.Mode == 1 ? "clutter" : (bmap.DDS.Format == D3DFormat.A8R8G8B8 ? "raw" : bmap.DDS.Format.ToString().ToLower())));
+                    outputName = $"{Path.GetFileNameWithoutExtension(path)}.{(bmap.Mode == 1 ? "clutter" : (bmap.DDS.Format == D3DFormat.A8R8G8B8 ? "raw" : bmap.DDS.Format.ToString().ToLower()))}.{settings.SaveAs}";
 
-                    Console.WriteLine("Saving   : {0}", outputName);
-                    if (!Overwrite(string.Format(@"{0}\{1}", Path.GetDirectoryName(path), outputName))) { return null; }
-                    bmap.SaveAsPNG(outputName);
+                    Console.WriteLine($"Saving   : {outputName}");
+                    if (!overwrite($@"{Path.GetDirectoryName(path)}\{outputName}")) { return null; }
+                    bmap.SaveAs(outputName, settings.SaveAs);
 
                     return path;
                 }
             }
             else if (extension == "dds")
             {
-                Console.WriteLine("Loading  : {0}", Path.GetFileName(path));
+                string newExtension = $"{(settings.NoRename ? "" : ".x")}.bmap";
+
+                Console.WriteLine($"Loading  : {Path.GetFileName(path)}");
+                Console.WriteLine($"Saving   : {Path.GetFileNameWithoutExtension(path)}{newExtension}");
+
                 bmap.Path = Path.GetFileName(path);
                 bmap.DDS = DDS.Load(path);
-                Console.WriteLine("Saving   : {0}", Path.GetFileName(path.Replace(".dds", ".bmap")));
-                bmap.Save(path.Replace(".dds", ".x.bmap"));
+                if (!overwrite(path.Replace(".dds", newExtension))) { return null; }
+                bmap.Save(path.Replace(".dds", newExtension));
 
                 return path;
             }
             else if (Array.IndexOf(new string[] { "png", "tga", "tif" }, extension) > -1)
             {
                 Texture texture = null;
-                Console.WriteLine("Loading   : {0}", Path.GetFileName(path));
+                Console.WriteLine($"Loading   : {Path.GetFileName(path)}");
 
                 switch (extension)
                 {
-                    case "png":
-                        texture = PNG.Load(path);
-                        break;
-
                     case "tga":
                         texture = TGA.Load(path);
                         break;
 
                     case "tif":
-                        texture = TIF.Load(path);
+                    case "png":
+                        texture = Texture.Load(path);
                         break;
                 }
 
@@ -351,7 +368,7 @@ namespace breckFest
 
                 if (settings.Clutter)
                 {
-                    Console.WriteLine("Cluttering: {0}x{1}", texture.Bitmap.Width, texture.Bitmap.Height);
+                    Console.WriteLine($"Cluttering: {texture.Bitmap.Width}x{texture.Bitmap.Height}");
 
                     bmap.Mode = 1;
                     bmap.Raw = texture.Bitmap;
@@ -360,18 +377,21 @@ namespace breckFest
                 {
                     if (settings.Format == D3DFormat.A8R8G8B8)
                     {
-                        Console.WriteLine("Formatting: {0}x{1} (this might take awhile)", texture.Bitmap.Width, texture.Bitmap.Height);
+                        Console.WriteLine($"Formatting: {texture.Bitmap.Width}x{texture.Bitmap.Height} (this might take awhile)");
                     }
                     else
                     {
-                        Console.WriteLine("Squishing : {0}x{1} (this might take awhile)", texture.Bitmap.Width, texture.Bitmap.Height);
+                        Console.WriteLine($"Squishing : {texture.Bitmap.Width}x{texture.Bitmap.Height} (this might take awhile)");
                     }
 
                     bmap.DDS = new DDS(settings.Format, texture.Bitmap);
                 }
 
-                Console.WriteLine("Saving    : {0}", Path.GetFileName(path.Replace(string.Format(".{0}", extension), ".bmap")));
-                bmap.Save(path.Replace(string.Format(".{0}", extension), ".x.bmap"), true);
+                string newExtension = $"{(settings.NoRename ? "" : ".x")}.bmap";
+
+                Console.WriteLine($"Saving    : {Path.GetFileNameWithoutExtension(path)}{newExtension}");
+                if (!overwrite(path.Replace($".{extension}", $"{newExtension}"))) { return null; }
+                bmap.Save(path.Replace($".{extension}", $"{newExtension}"), true);
 
                 settings = original.Clone();
 
@@ -381,7 +401,7 @@ namespace breckFest
             return null;
         }
 
-        private static bool Overwrite(string path)
+        private static bool overwrite(string path)
         {
             if (!File.Exists(path))
             {
@@ -391,7 +411,7 @@ namespace breckFest
             {
                 if (!settings.ForceOverwrite)
                 {
-                    Console.WriteLine("Warning  : {0} already exists.", path);
+                    Console.WriteLine($"Warning  : {path} already exists.");
                     Console.WriteLine("Overwrite?");
 
                     while (true)
@@ -420,59 +440,31 @@ namespace breckFest
 
     public class BreckfestSettings
     {
-        bool clutter;
-        bool raw;
-        bool compress;
-        D3DFormat format;
-        bool force;
+        public bool Clutter { get; set; }
 
-        public bool Clutter
-        {
-            get { return clutter; }
-            set { clutter = value; }
-        }
+        public bool Raw { get; set; }
 
-        public bool Raw
-        {
-            get { return raw; }
-            set { raw = value; }
-        }
+        public bool Compress { get; set; }
 
-        public bool Compress
-        {
-            get { return compress; }
-            set { compress = value; }
-        }
+        public D3DFormat Format { get; set; } = D3DFormat.DXT5;
 
-        public D3DFormat Format
-        {
-            get { return format; }
-            set { format = value; }
-        }
+        public bool ForceOverwrite { get; set; }
 
-        public bool ForceOverwrite
-        {
-            get { return force; }
-            set { force = value; }
-        }
+        public bool NoRename { get; set; }
 
-        public BreckfestSettings()
-        {
-            this.clutter = false;
-            this.raw = false;
-            this.force = false;
-            this.format = D3DFormat.DXT5;
-        }
+        public OutputFormat SaveAs { get; set; } = OutputFormat.PNG;
 
         public BreckfestSettings Clone()
         {
             return new BreckfestSettings
             {
-                clutter = this.clutter,
-                raw = this.raw,
-                compress = this.compress,
-                force = this.force,
-                format = this.format
+                Clutter = Clutter,
+                Raw = Raw,
+                Compress = Compress,
+                ForceOverwrite = ForceOverwrite,
+                Format = Format,
+                NoRename = NoRename,
+                SaveAs = SaveAs
             };
         }
     }

@@ -11,11 +11,6 @@ namespace breckFest
 {
     public enum D3DFormat : uint
     {
-        // Historic (occur in x360 files)
-        X360_A8R8G8B8 = 6,
-        X360_DXT1 = 18,
-        X360_DXT2 = 19,
-
         A8R8G8B8 = 21,
         A8 = 28,
         ATI2 = 0x32495441,  // MakeFourCC('A', 'T', 'I', '2')
@@ -65,120 +60,68 @@ namespace breckFest
 
     public class DDSPixelFormat
     {
-        PixelFormatFlags flags;
-        PixelFormatFourCC fourCC;
-        int rgbBitCount;
-        uint rBitMask;
-        uint gBitMask;
-        uint bBitMask;
-        uint aBitMask;
+        public PixelFormatFlags Flags { get; set; }
 
-        public PixelFormatFlags Flags
-        {
-            get { return flags; }
-            set { flags = value; }
-        }
+        public PixelFormatFourCC FourCC { get; set; }
 
-        public PixelFormatFourCC FourCC
-        {
-            get { return fourCC; }
-            set { fourCC = value; }
-        }
+        public int RGBBitCount { get; set; }
 
-        public int RGBBitCount
-        {
-            get { return rgbBitCount; }
-            set { rgbBitCount = value; }
-        }
+        public uint RBitMask { get; set; }
 
-        public uint RBitMask
-        {
-            get { return rBitMask; }
-            set { rBitMask = value; }
-        }
+        public uint GBitMask { get; set; }
 
-        public uint GBitMask
-        {
-            get { return gBitMask; }
-            set { gBitMask = value; }
-        }
+        public uint BBitMask { get; set; }
 
-        public uint BBitMask
-        {
-            get { return bBitMask; }
-            set { bBitMask = value; }
-        }
-
-        public uint ABitMask
-        {
-            get { return aBitMask; }
-            set { aBitMask = value; }
-        }
+        public uint ABitMask { get; set; }
     }
 
     public class DDS
     {
         [Flags]
-        public enum Flags
+        public enum HeaderFlags
         {
-            Caps = 1,
-            Height = 2,
-            Width = 4,
-            Pitch = 8,
-            PixelFormat = 4096,
-            MipMapCount = 131072,
-            LinearSize = 524288,
-            DepthTexture = 8388608
+            Caps = 0x1,
+            Height = 0x2,
+            Width = 0x4,
+            Pitch = 0x8,
+            PixelFormat = 0x1000,
+            MipMapCount = 0x20000,
+            LinearSize = 0x80000,
+            Depth = 0x800000
         }
 
-        Flags flags;
-        int height;
-        int width;
-        int pitch;
-        int depth = 0;
-        DDSPixelFormat pixelFormat;
-        DDSCaps caps;
-        DDSCaps2 caps2;
+        public HeaderFlags Flags { get; set; }
 
-        D3DFormat format;
-        List<MipMap> mipMaps = new List<MipMap>();
+        public int Height { get; set; }
 
-        public int Height
-        {
-            get { return height; }
-            set { height = value; }
-        }
+        public int Width { get; set; }
 
-        public int Width
-        {
-            get { return width; }
-            set { width = value; }
-        }
+        public int Pitch { get; set; }
 
-        public int Depth
-        {
-            get { return depth; }
-        }
+        public int Depth { get; set; } = 0;
 
-        public D3DFormat Format
-        {
-            get { return format; }
-        }
+        public DDSPixelFormat PixelFormat { get; set; }
 
-        public List<MipMap> MipMaps
-        {
-            get { return mipMaps; }
-            set { mipMaps = value; }
-        }
+        public DDSCaps Caps { get; set; }
+
+        public DDSCaps2 Caps2 { get; set; }
+
+        public string Name { get; set; }
+
+        public string Extension { get; } = "dds";
+
+        public List<MipMap> MipMaps { get; set; } = new List<MipMap>();
+
+        public D3DFormat Format { get; set; }
 
         public DDS() { }
 
-        public DDS(D3DFormat Format, Bitmap bitmap)
+        public DDS(D3DFormat format, Bitmap bitmap)
         {
             SquishFlags flags = SquishFlags.kDxt1;
-            bool bCompressed = true;
+            bool compressed = true;
 
-            switch (Format)
+            switch (format)
             {
                 case D3DFormat.DXT1:
                     flags = SquishFlags.kDxt1;
@@ -193,25 +136,27 @@ namespace breckFest
                     break;
 
                 default:
-                    bCompressed = false;
+                    compressed = false;
                     break;
             }
 
-            format = Format;
-            width = bitmap.Width;
-            height = bitmap.Height;
+            Format = format;
+            Width = bitmap.Width;
+            Height = bitmap.Height;
 
-            var mip = new MipMap();
-            mip.Width = width;
-            mip.Height = height;
+            MipMap mip = new MipMap
+            {
+                Width = Width,
+                Height = Height
+            };
 
             byte[] data = new byte[mip.Width * mip.Height * 4];
 
-            BitmapData bmpdata = bitmap.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            BitmapData bmpdata = bitmap.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             Marshal.Copy(bmpdata.Scan0, data, 0, bmpdata.Stride * bmpdata.Height);
             bitmap.UnlockBits(bmpdata);
 
-            if (bCompressed)
+            if (compressed)
             {
                 for (uint i = 0; i < data.Length - 4; i += 4)
                 {
@@ -220,8 +165,8 @@ namespace breckFest
                     data[i + 2] = r;
                 }
 
-                byte[] dest = new byte[Squish.Squish.GetStorageRequirements(mip.Width, mip.Height, flags | SquishFlags.kColourIterativeClusterFit | SquishFlags.kWeightColourByAlpha)];
-                Squish.Squish.CompressImage(data, mip.Width, mip.Height, ref dest, flags | SquishFlags.kColourIterativeClusterFit | SquishFlags.kWeightColourByAlpha);
+                byte[] dest = new byte[Squish.Squish.GetStorageRequirements(mip.Width, mip.Height, flags | SquishFlags.kColourIterativeClusterFit)];
+                Squish.Squish.CompressImage(data, mip.Width, mip.Height, dest, flags | SquishFlags.kColourIterativeClusterFit, true);
                 mip.Data = dest;
             }
             else
@@ -229,12 +174,12 @@ namespace breckFest
                 mip.Data = data;
             }
 
-            mipMaps.Add(mip);
+            MipMaps.Add(mip);
         }
 
         public static DDS Load(string path)
         {
-            return DDS.Load(File.ReadAllBytes(path));
+            return Load(File.ReadAllBytes(path));
         }
 
         public static DDS Load(byte[] data)
@@ -246,48 +191,49 @@ namespace breckFest
             {
                 if (!IsDDS(br)) { return null; }
 
-                dds.pixelFormat = new DDSPixelFormat();
-
                 br.ReadUInt32();    // header length
-                dds.flags = (Flags)br.ReadUInt32();
-                dds.height = (int)br.ReadUInt32();
-                dds.width = (int)br.ReadUInt32();
-                dds.pitch = (int)br.ReadUInt32();
-                dds.depth = (int)br.ReadUInt32();
+                dds.Flags = (HeaderFlags)br.ReadUInt32();
+                dds.Height = (int)br.ReadUInt32();
+                dds.Width = (int)br.ReadUInt32();
+                dds.Pitch = (int)br.ReadUInt32();
+                dds.Depth = (int)br.ReadUInt32();
                 int mipCount = (int)br.ReadUInt32();
                 for (int i = 0; i < 11; i++) { br.ReadUInt32(); }
                 br.ReadUInt32();    // pixel format length
-                dds.pixelFormat.Flags = (PixelFormatFlags)br.ReadUInt32();
-                dds.pixelFormat.FourCC = (PixelFormatFourCC)br.ReadUInt32();
-                dds.pixelFormat.RGBBitCount = (int)br.ReadUInt32();
-                dds.pixelFormat.RBitMask = br.ReadUInt32();
-                dds.pixelFormat.GBitMask = br.ReadUInt32();
-                dds.pixelFormat.BBitMask = br.ReadUInt32();
-                dds.pixelFormat.ABitMask = br.ReadUInt32();
-                dds.caps = (DDSCaps)br.ReadUInt32();
-                dds.caps2 = (DDSCaps2)br.ReadUInt32();
+                dds.PixelFormat = new DDSPixelFormat
+                {
+                    Flags = (PixelFormatFlags)br.ReadUInt32(),
+                    FourCC = (PixelFormatFourCC)br.ReadUInt32(),
+                    RGBBitCount = (int)br.ReadUInt32(),
+                    RBitMask = br.ReadUInt32(),
+                    GBitMask = br.ReadUInt32(),
+                    BBitMask = br.ReadUInt32(),
+                    ABitMask = br.ReadUInt32()
+                };
+                dds.Caps = (DDSCaps)br.ReadUInt32();
+                dds.Caps2 = (DDSCaps2)br.ReadUInt32();
                 br.ReadUInt32();
                 br.ReadUInt32();
                 br.ReadUInt32();
 
-                if (dds.pixelFormat.Flags.HasFlag(PixelFormatFlags.DDPF_FOURCC))
+                if (dds.PixelFormat.Flags.HasFlag(PixelFormatFlags.DDPF_FOURCC))
                 {
-                    dds.format = (D3DFormat)dds.pixelFormat.FourCC;
+                    dds.Format = (D3DFormat)dds.PixelFormat.FourCC;
                 }
-                else if (dds.pixelFormat.Flags.HasFlag(PixelFormatFlags.DDPF_RGB) & dds.pixelFormat.Flags.HasFlag(PixelFormatFlags.DDPF_ALPHAPIXELS))
+                else if (dds.PixelFormat.Flags.HasFlag(PixelFormatFlags.DDPF_RGB) & dds.PixelFormat.Flags.HasFlag(PixelFormatFlags.DDPF_ALPHAPIXELS))
                 {
-                    dds.format = D3DFormat.A8R8G8B8;
+                    dds.Format = D3DFormat.A8R8G8B8;
                 }
 
                 for (int i = 0; i < Math.Max(1, mipCount); i++)
                 {
-                    var mip = new MipMap
+                    MipMap mip = new MipMap
                     {
-                        Width = dds.width >> i,
-                        Height = dds.height >> i
+                        Width = dds.Width >> i,
+                        Height = dds.Height >> i
                     };
 
-                    switch (dds.format)
+                    switch (dds.Format)
                     {
                         case D3DFormat.A8R8G8B8:
                             mip.Data = br.ReadBytes(mip.Width * mip.Height * 4);
@@ -303,7 +249,7 @@ namespace breckFest
                             break;
                     }
 
-                    dds.mipMaps.Add(mip);
+                    dds.MipMaps.Add(mip);
                 }
             }
 
@@ -322,7 +268,7 @@ namespace breckFest
 
         public void Save(string path)
         {
-            using (BinaryWriter bw = new BinaryWriter(new FileStream(path + ".dds", FileMode.Create)))
+            using (BinaryWriter bw = new BinaryWriter(new FileStream(path, FileMode.Create)))
             {
                 Save(bw, this);
             }
@@ -330,15 +276,15 @@ namespace breckFest
 
         public static void Save(BinaryWriter bw, DDS dds)
         {
-            Flags flags = (Flags.Caps | Flags.Height | Flags.Width | Flags.PixelFormat | Flags.MipMapCount);
-            flags |= (dds.format == D3DFormat.A8R8G8B8 ? Flags.Pitch : Flags.LinearSize);
+            HeaderFlags flags = HeaderFlags.Caps | HeaderFlags.Height | HeaderFlags.Width | HeaderFlags.PixelFormat | HeaderFlags.MipMapCount;
+            flags |= dds.Format == D3DFormat.A8R8G8B8 ? HeaderFlags.Pitch : HeaderFlags.LinearSize;
 
             bw.Write(new byte[] { 0x44, 0x44, 0x53, 0x20 });    // 'DDS '
             bw.Write(124);
             bw.Write((int)flags);
             bw.Write(dds.Height);
             bw.Write(dds.Width);
-            bw.Write((flags.HasFlag(Flags.Pitch) ? dds.width * 4 : dds.MipMaps[0].Data.Length));
+            bw.Write(flags.HasFlag(HeaderFlags.Pitch) ? dds.Width * 4 : dds.MipMaps[0].Data.Length);
             bw.Write(dds.Depth);
             bw.Write(dds.MipMaps.Count);
 
@@ -378,21 +324,21 @@ namespace breckFest
             bw.Write(0);    // Caps 4
             bw.Write(0);    // Reserved
 
-            for (int i = 0; i < dds.mipMaps.Count; i++)
+            for (int i = 0; i < dds.MipMaps.Count; i++)
             {
-                bw.Write(dds.mipMaps[i].Data);
+                bw.Write(dds.MipMaps[i].Data);
             }
         }
 
-        public Bitmap Decompress(int mipLevel = 0, bool bSuppressAlpha = false)
+        public Bitmap Decompress(int mipLevel = 0, bool suppressAlpha = false)
         {
-            var mip = this.MipMaps[mipLevel];
+            MipMap mip = MipMaps[mipLevel];
 
-            Bitmap b = new Bitmap(mip.Width, mip.Height, PixelFormat.Format32bppArgb);
-            Squish.SquishFlags flags = 0;
-            bool bNotCompressed = false;
+            Bitmap b = new Bitmap(mip.Width, mip.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            SquishFlags flags = 0;
+            bool notCompressed = false;
 
-            switch (this.format)
+            switch (Format)
             {
                 case D3DFormat.DXT1:
                     flags = SquishFlags.kDxt1;
@@ -403,31 +349,31 @@ namespace breckFest
                     break;
 
                 case D3DFormat.A8R8G8B8:
-                    bNotCompressed = true;
+                    notCompressed = true;
                     break;
 
                 default:
-                    throw new NotImplementedException(string.Format("Can't decompress: {0}", this.format));
+                    throw new NotImplementedException($"Can't decompress: {Format}");
             }
 
             byte[] dest = new byte[mip.Width * mip.Height * 4];
             byte[] data = mip.Data;
 
-            if (bNotCompressed)
+            if (notCompressed)
             {
                 for (uint i = 0; i < data.Length - 4; i += 4)
                 {
                     uint colour = (uint)((data[i + 3] << 24) | (data[i + 2] << 16) | (data[i + 1] << 8) | (data[i + 0] << 0));
 
-                    dest[i + 0] = (byte)((colour & this.pixelFormat.BBitMask) >> 0);
-                    dest[i + 1] = (byte)((colour & this.pixelFormat.GBitMask) >> 8);
-                    dest[i + 2] = (byte)((colour & this.pixelFormat.RBitMask) >> 16);
-                    dest[i + 3] = (byte)((colour & this.pixelFormat.ABitMask) >> 24);
+                    dest[i + 0] = (byte)((colour & PixelFormat.BBitMask) >> 0);
+                    dest[i + 1] = (byte)((colour & PixelFormat.GBitMask) >> 8);
+                    dest[i + 2] = (byte)((colour & PixelFormat.RBitMask) >> 16);
+                    dest[i + 3] = (byte)((colour & PixelFormat.ABitMask) >> 24);
                 }
             }
             else
             {
-                Squish.Squish.DecompressImage(dest, mip.Width, mip.Height, ref data, flags);
+                Squish.Squish.DecompressImage(dest, mip.Width, mip.Height, data, flags);
 
                 for (uint i = 0; i < dest.Length - 4; i += 4)
                 {
@@ -437,8 +383,8 @@ namespace breckFest
                 }
             }
 
-            var bmpdata = b.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadWrite, (bSuppressAlpha ? PixelFormat.Format32bppRgb : b.PixelFormat));
-            System.Runtime.InteropServices.Marshal.Copy(dest, 0, bmpdata.Scan0, dest.Length);
+            BitmapData bmpdata = b.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadWrite, (suppressAlpha ? System.Drawing.Imaging.PixelFormat.Format32bppRgb : b.PixelFormat));
+            Marshal.Copy(dest, 0, bmpdata.Scan0, dest.Length);
             b.UnlockBits(bmpdata);
 
             return b;
@@ -447,26 +393,10 @@ namespace breckFest
 
     public class MipMap
     {
-        int width;
-        int height;
-        byte[] data;
+        public int Width { get; set; }
 
-        public int Width
-        {
-            get { return width; }
-            set { width = value; }
-        }
+        public int Height { get; set; }
 
-        public int Height
-        {
-            get { return height; }
-            set { height = value; }
-        }
-
-        public byte[] Data
-        {
-            get { return data; }
-            set { data = value; }
-        }
+        public byte[] Data { get; set; }
     }
 }

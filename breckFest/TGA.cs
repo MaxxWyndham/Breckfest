@@ -10,7 +10,7 @@ namespace breckFest
     {
         public static new TGA Load(string path)
         {
-            return TGA.Load(File.ReadAllBytes(path));
+            return Load(File.ReadAllBytes(path));
         }
 
         public static TGA Load(byte[] data)
@@ -40,8 +40,8 @@ namespace breckFest
 
                 if (size == 3) { format = PixelFormat.Format24bppRgb; }
 
-                tga.bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
-                bmpdata = tga.bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, format);
+                tga.Bitmap = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+                bmpdata = tga.Bitmap.LockBits(new Rectangle(0, 0, width, height), ImageLockMode.ReadWrite, format);
 
                 if (imageType == 10)
                 {
@@ -51,11 +51,11 @@ namespace breckFest
                     int bpCount = 0;
                     int currentPixel = 0;
                     int pixelCount = width * height;
-                    var colorBuffer = new byte[size];
+                    byte[] colorBuffer = new byte[size];
                     byte chunkHeader = 0;
                     byte[] buffer = br.ReadBytes((int)br.BaseStream.Length - 13);
 
-                    using (var nms = new MemoryStream())
+                    using (MemoryStream nms = new MemoryStream())
                     {
                         while (currentPixel < pixelCount)
                         {
@@ -81,7 +81,7 @@ namespace breckFest
                             }
                         }
 
-                        var contentBuffer = new byte[nms.Length];
+                        byte[] contentBuffer = new byte[nms.Length];
                         nms.Position = 0;
                         nms.Read(contentBuffer, 0, contentBuffer.Length);
 
@@ -93,7 +93,7 @@ namespace breckFest
                     Marshal.Copy(br.ReadBytes(width * height * size), 0, bmpdata.Scan0, width * height * size);
                 }
 
-                tga.bitmap.UnlockBits(bmpdata);
+                tga.Bitmap.UnlockBits(bmpdata);
             }
 
             return tga;

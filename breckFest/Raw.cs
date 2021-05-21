@@ -1,12 +1,10 @@
-﻿
-using System;
-using System.IO;
+﻿using System.IO;
 
 namespace breckFest
 {
     public class Raw
     {
-        public static void Load(string path, bool bDump = false)
+        public static void Load(string path, bool dump = false)
         {
             byte[] buff = new byte[134217728];
             int size = 0;
@@ -20,17 +18,17 @@ namespace breckFest
                 {
                     int length = (int)br.ReadUInt32();
 
-                    using (var lzs = new MemoryStream(br.ReadBytes(length)))
-                    using (var lz4 = new LZ4Decompress(lzs))
+                    using (MemoryStream lzs = new MemoryStream(br.ReadBytes(length)))
+                    using (LZ4Decompress lz4 = new LZ4Decompress(lzs))
                     {
                         size += lz4.Read(buff, size, buff.Length);
                     }
                 }
             }
 
-            if (bDump)
+            if (dump)
             {
-                using (BinaryWriter bw = new BinaryWriter(new FileStream(path + ".raw", FileMode.Create)))
+                using (BinaryWriter bw = new BinaryWriter(new FileStream($"{path}.raw", FileMode.Create)))
                 {
                     bw.Write(buff, 0, size);
                 }
