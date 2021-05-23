@@ -97,7 +97,8 @@ namespace breckFest
     public enum OutputFormat
     {
         PNG,
-        DDS
+        DDS,
+        TGA
     }
 
     class Program
@@ -158,6 +159,10 @@ namespace breckFest
 
                             case "-dds":
                                 settings.SaveAs = OutputFormat.DDS;
+                                break;
+
+                            case "-tga":
+                                settings.SaveAs = OutputFormat.TGA;
                                 break;
 
                             case "-norename":

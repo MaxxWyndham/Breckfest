@@ -20,7 +20,7 @@ namespace breckFest
         {
             BMAP bmap = new BMAP();
 
-            byte[] buff = new byte[536870912]; // 134217728
+            byte[] buff = new byte[536870912];
             int size = 0;
 
             using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(path)))
@@ -135,6 +135,10 @@ namespace breckFest
 
                     case OutputFormat.DDS:
                         DDS.Save(path);
+                        break;
+
+                    case OutputFormat.TGA:
+                        TGA.FromBitmap(DDS.Decompress()).Save(path);
                         break;
                 }
                 
