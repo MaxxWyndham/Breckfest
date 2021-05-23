@@ -62,6 +62,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BC5U.cs" />
     <Compile Include="BMAP.cs" />
     <Compile Include="DDS.cs" />
     <Compile Include="ExtensionMethods.cs" />

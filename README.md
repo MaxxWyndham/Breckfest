@@ -20,6 +20,7 @@ Commandline options:
 -c[lutter] : Generates clutter bmaps  
 -dxt1 : Compresses using DXT1 compression  
 -dxt5 : Compresses using DXT5 compression  
+-bc5u : Compresses using BC5U compression
 -raw : No compression  
 -f[orce] : Breckfest will automatically overwrite files  
 -dump : Decompresses any valid Wreckfest compressed file  

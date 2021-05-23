@@ -149,6 +149,10 @@ namespace breckFest
                                 settings.Format = D3DFormat.DXT5;
                                 break;
 
+                            case "-bc5u":
+                                settings.Format = D3DFormat.BC5U;
+                                break;
+
                             case "-raw":
                                 settings.Format = D3DFormat.A8R8G8B8;
                                 break;

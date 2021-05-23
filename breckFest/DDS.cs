@@ -16,14 +16,16 @@ namespace breckFest
         ATI2 = 0x32495441,  // MakeFourCC('A', 'T', 'I', '2')
         DXT1 = 0x31545844,  // MakeFourCC('D', 'X', 'T', '1')
         DXT3 = 0x33545844,  // MakeFourCC('D', 'X', 'T', '3')
-        DXT5 = 0x35545844   // MakeFourCC('D', 'X', 'T', '5')
+        DXT5 = 0x35545844,  // MakeFourCC('D', 'X', 'T', '5')
+        BC5U = 0x55354342   // MakeFourCC('B', 'C', '5', 'U')
     }
 
     public enum PixelFormatFourCC
     {
         DXT1 = 0x31545844,  // MakeFourCC('D', 'X', 'T', '1')
         DXT3 = 0x33545844,  // MakeFourCC('D', 'X', 'T', '3')
-        DXT5 = 0x35545844   // MakeFourCC('D', 'X', 'T', '5')
+        DXT5 = 0x35545844,  // MakeFourCC('D', 'X', 'T', '5')
+        BC5U = 0x55354342   // MakeFourCC('B', 'C', '5', 'U')
     }
 
     [Flags]
@@ -251,7 +253,8 @@ namespace breckFest
 
                         case D3DFormat.DXT3:
                         case D3DFormat.DXT5:
-                            mip.Data = br.ReadBytes((((mip.Width + 3) / 4) * ((mip.Height + 3) / 4)) * 16);
+                        case D3DFormat.BC5U:
+                            mip.Data = br.ReadBytes((mip.Width + 3) / 4 * ((mip.Height + 3) / 4) * 16);
                             break;
                     }
 
@@ -343,6 +346,7 @@ namespace breckFest
             Bitmap b = new Bitmap(mip.Width, mip.Height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
             SquishFlags flags = 0;
             bool notCompressed = false;
+            bool bc5uCompressed = false;
 
             switch (Format)
             {
@@ -356,6 +360,10 @@ namespace breckFest
 
                 case D3DFormat.A8R8G8B8:
                     notCompressed = true;
+                    break;
+
+                case D3DFormat.BC5U:
+                    bc5uCompressed = true;
                     break;
 
                 default:
@@ -376,6 +384,10 @@ namespace breckFest
                     dest[i + 2] = (byte)((colour & PixelFormat.RBitMask) >> 16);
                     dest[i + 3] = (byte)((colour & PixelFormat.ABitMask) >> 24);
                 }
+            }
+            else if (bc5uCompressed)
+            {
+                dest = BC5U.Decompress(mip.Data, (uint)mip.Width, (uint)mip.Height);
             }
             else
             {
