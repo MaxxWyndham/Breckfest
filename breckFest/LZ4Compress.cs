@@ -1,6 +1,4 @@
-﻿using System;
-
-/*
+﻿/*
    LZ4 - Fast LZ compression algorithm
    Copyright (C) 2011-2012, Yann Collet.
    BSD 2-Clause License (http://www.opensource.org/licenses/bsd-license.php)
@@ -28,6 +26,8 @@
    - LZ4 homepage : http://fastcompression.blogspot.com/p/lz4.html
    - LZ4 source repository : http://code.google.com/p/lz4/
 */
+
+using System;
 
 namespace breckFest
 {
@@ -279,9 +279,9 @@ namespace breckFest
                 for (; lastRun > 254; lastRun -= 255) { dest[op++] = 255; }
                 dest[op++] = (byte)lastRun;
             }
-            else 
-            { 
-                dest[op++] = (byte)(lastRun << ML_BITS); 
+            else
+            {
+                dest[op++] = (byte)(lastRun << ML_BITS);
             }
 
             blockCopy(source, anchor, dest, op, src_end - anchor);

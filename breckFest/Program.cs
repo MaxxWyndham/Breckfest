@@ -234,8 +234,10 @@ namespace breckFest
 
         private static string processFile(string path)
         {
+            path = Path.GetFullPath(path);
+
             BMAP bmap = new BMAP();
-            string extension = Path.GetExtension(path).Substring(1);
+            string extension = Path.GetExtension(path).Substring(1).ToLower();
             string outputName;
 
             if (settings.Raw)
@@ -326,14 +328,15 @@ namespace breckFest
             else if (extension == "dds")
             {
                 string newExtension = $"{(settings.NoRename ? "" : ".x")}.bmap";
+                string outFile = $"{Path.GetFileNameWithoutExtension(path)}{newExtension}";
 
                 Console.WriteLine($"Loading  : {Path.GetFileName(path)}");
-                Console.WriteLine($"Saving   : {Path.GetFileNameWithoutExtension(path)}{newExtension}");
+                Console.WriteLine($"Saving   : {outFile}");
 
-                bmap.Path = Path.GetFileName(path);
+                bmap.Path = path.Contains(@"\data\") ? path.Substring(path.IndexOf(@"data\")).Replace(@"\", "/") : Path.GetFileName(path);
                 bmap.DDS = DDS.Load(path);
-                if (!overwrite(path.Replace(".dds", newExtension))) { return null; }
-                bmap.Save(path.Replace(".dds", newExtension));
+                if (!overwrite(outFile)) { return null; }
+                bmap.Save(outFile);
 
                 return path;
             }
@@ -359,25 +362,30 @@ namespace breckFest
                 if (Path.GetFileNameWithoutExtension(path).EndsWith(".clutter", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.Clutter = true;
-                    path = path.Replace(".clutter", "");
+                    path = path.Replace(".clutter", "", true);
                 }
                 else if (Path.GetFileNameWithoutExtension(path).EndsWith(".raw", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.Format = D3DFormat.A8R8G8B8;
-                    path = path.Replace(".raw", "");
+                    path = path.Replace(".raw", "", true);
                 }
                 else if (Path.GetFileNameWithoutExtension(path).EndsWith(".dxt1", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.Format = D3DFormat.DXT1;
-                    path = path.Replace(".dxt1", "");
+                    path = path.Replace(".dxt1", "", true);
                 }
                 else if (Path.GetFileNameWithoutExtension(path).EndsWith(".dxt5", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.Format = D3DFormat.DXT5;
-                    path = path.Replace(".dxt5", "");
+                    path = path.Replace(".dxt5", "", true);
+                }
+                else if (Path.GetFileNameWithoutExtension(path).EndsWith(".bc5u", StringComparison.OrdinalIgnoreCase))
+                {
+                    settings.Format = D3DFormat.BC5U;
+                    path = path.Replace(".bc5u", "", true);
                 }
 
-                bmap.Path = Path.GetFileName(path);
+                bmap.Path = path.Contains(@"\data\") ? path.Substring(path.IndexOf(@"data\")).Replace(@"\", "/") : Path.GetFileName(path);
 
                 if (settings.Clutter)
                 {
@@ -392,10 +400,11 @@ namespace breckFest
                 }
 
                 string newExtension = $"{(settings.NoRename ? "" : ".x")}.bmap";
+                string outFile = $"{Path.GetFileNameWithoutExtension(path)}{newExtension}";
 
-                Console.WriteLine($"Saving    : {Path.GetFileNameWithoutExtension(path)}{newExtension}");
-                if (!overwrite(path.Replace($".{extension}", $"{newExtension}"))) { return null; }
-                bmap.Save(path.Replace($".{extension}", $"{newExtension}"), true);
+                Console.WriteLine($"Saving    : {outFile}");
+                if (!overwrite(outFile)) { return null; }
+                bmap.Save(outFile, true);
 
                 settings = original.Clone();
 

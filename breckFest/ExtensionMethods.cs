@@ -1,4 +1,5 @@
 ﻿using System.IO;
+using System.Text.RegularExpressions;
 
 namespace breckFest
 {
@@ -35,6 +36,11 @@ namespace breckFest
             } while (c > 0);
 
             return r;
+        }
+
+        public static string Replace(this string s, string oldValue, string newValue, bool ignoreCase)
+        {
+            return Regex.Replace(s, oldValue, newValue, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
         }
     }
 }
