@@ -30,6 +30,8 @@ namespace breckFest
 
         public byte[] Data { get; set; }
 
+        public override Bitmap Bitmap => GetBitmap();
+
         public static new TGA Load(string path)
         {
             TGA tga;

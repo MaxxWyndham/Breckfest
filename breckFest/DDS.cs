@@ -116,7 +116,7 @@ namespace breckFest
 
         public DDS() { }
 
-        public DDS(D3DFormat format, Bitmap bitmap)
+        public DDS(D3DFormat format, Bitmap bitmap, bool generateMipMaps = true)
         {
             SquishFlags flags = SquishFlags.kDxt1;
             bool compressed = true;
@@ -144,37 +144,43 @@ namespace breckFest
             Width = bitmap.Width;
             Height = bitmap.Height;
 
-            MipMap mip = new MipMap
+            foreach (Bitmap mipmapBitmap in generateMipMaps ? MipMap.GenerateMipMaps(bitmap, bitmap.Width, bitmap.Height) : new List<Bitmap> { bitmap })
             {
-                Width = Width,
-                Height = Height
-            };
-
-            byte[] data = new byte[mip.Width * mip.Height * 4];
-
-            BitmapData bmpdata = bitmap.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            Marshal.Copy(bmpdata.Scan0, data, 0, bmpdata.Stride * bmpdata.Height);
-            bitmap.UnlockBits(bmpdata);
-
-            if (compressed)
-            {
-                for (uint i = 0; i < data.Length - 4; i += 4)
+                MipMap mip = new MipMap
                 {
-                    byte r = data[i + 0];
-                    data[i + 0] = data[i + 2];
-                    data[i + 2] = r;
+                    Width = mipmapBitmap.Width,
+                    Height = mipmapBitmap.Height
+                };
+
+                byte[] data = new byte[mip.Width * mip.Height * 4];
+
+                BitmapData bmpdata = mipmapBitmap.LockBits(new Rectangle(0, 0, mip.Width, mip.Height), ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                Marshal.Copy(bmpdata.Scan0, data, 0, bmpdata.Stride * bmpdata.Height);
+                mipmapBitmap.UnlockBits(bmpdata);
+
+                if (compressed)
+                {
+                    Console.WriteLine($"Squishing : {mip.Width}x{mip.Height}");
+
+                    for (uint i = 0; i < data.Length - 4; i += 4)
+                    {
+                        byte r = data[i + 0];
+                        data[i + 0] = data[i + 2];
+                        data[i + 2] = r;
+                    }
+
+                    byte[] dest = new byte[Squish.Squish.GetStorageRequirements(mip.Width, mip.Height, flags | SquishFlags.kColourIterativeClusterFit)];
+                    Squish.Squish.CompressImage(data, mip.Width, mip.Height, dest, flags | SquishFlags.kColourIterativeClusterFit, true);
+                    mip.Data = dest;
+                }
+                else
+                {
+                    Console.WriteLine($"Formatting: {mip.Width}x{mip.Height}");
+                    mip.Data = data;
                 }
 
-                byte[] dest = new byte[Squish.Squish.GetStorageRequirements(mip.Width, mip.Height, flags | SquishFlags.kColourIterativeClusterFit)];
-                Squish.Squish.CompressImage(data, mip.Width, mip.Height, dest, flags | SquishFlags.kColourIterativeClusterFit, true);
-                mip.Data = dest;
+                MipMaps.Add(mip);
             }
-            else
-            {
-                mip.Data = data;
-            }
-
-            MipMaps.Add(mip);
         }
 
         public static DDS Load(string path)
@@ -240,7 +246,7 @@ namespace breckFest
                             break;
 
                         case D3DFormat.DXT1:
-                            mip.Data = br.ReadBytes((((mip.Width + 3) / 4) * ((mip.Height + 3) / 4)) * 8);
+                            mip.Data = br.ReadBytes((mip.Width + 3) / 4 * ((mip.Height + 3) / 4) * 8);
                             break;
 
                         case D3DFormat.DXT3:
@@ -398,5 +404,31 @@ namespace breckFest
         public int Height { get; set; }
 
         public byte[] Data { get; set; }
+
+        public static List<Bitmap> GenerateMipMaps(Bitmap b, int width, int height)
+        {
+            List<Bitmap> mips = new List<Bitmap>() { b };
+            int currentWidth = width / 2;
+            int currentHeight = height / 2;
+            int i = 1;
+
+            while (currentWidth > 1 && currentHeight > 1)
+            {
+                Bitmap mipimage = new Bitmap(currentWidth, currentHeight);
+                RectangleF srcRect = new RectangleF(0, 0, width, height);
+                RectangleF destRect = new RectangleF(0, 0, currentWidth, currentHeight);
+                Graphics grfx = Graphics.FromImage(mipimage);
+
+                grfx.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                grfx.DrawImage(b, destRect, srcRect, GraphicsUnit.Pixel);
+                mips.Add(mipimage);
+                i++;
+
+                currentHeight /= 2;
+                currentWidth /= 2;
+            }
+
+            return mips;
+        }
     }
 }

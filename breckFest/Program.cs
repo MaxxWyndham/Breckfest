@@ -170,6 +170,10 @@ namespace breckFest
                                 settings.NoRename = true;
                                 break;
 
+                            case "-nomipmaps":
+                                settings.GenerateMipMaps = false;
+                                break;
+
                             default:
                                 Console.WriteLine($"Unknown argument: {s}");
                                 return;
@@ -380,16 +384,7 @@ namespace breckFest
                 }
                 else
                 {
-                    if (settings.Format == D3DFormat.A8R8G8B8)
-                    {
-                        Console.WriteLine($"Formatting: {texture.Bitmap.Width}x{texture.Bitmap.Height} (this might take awhile)");
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Squishing : {texture.Bitmap.Width}x{texture.Bitmap.Height} (this might take awhile)");
-                    }
-
-                    bmap.DDS = new DDS(settings.Format, texture.Bitmap);
+                    bmap.DDS = new DDS(settings.Format, texture.Bitmap, settings.GenerateMipMaps);
                 }
 
                 string newExtension = $"{(settings.NoRename ? "" : ".x")}.bmap";
@@ -459,6 +454,8 @@ namespace breckFest
 
         public OutputFormat SaveAs { get; set; } = OutputFormat.PNG;
 
+        public bool GenerateMipMaps { get; set; } = true;
+
         public BreckfestSettings Clone()
         {
             return new BreckfestSettings
@@ -469,7 +466,8 @@ namespace breckFest
                 ForceOverwrite = ForceOverwrite,
                 Format = Format,
                 NoRename = NoRename,
-                SaveAs = SaveAs
+                SaveAs = SaveAs,
+                GenerateMipMaps = GenerateMipMaps
             };
         }
     }

@@ -4,7 +4,7 @@ namespace breckFest
 {
     public class Texture
     {
-        public Bitmap Bitmap { get; protected set; }
+        public virtual Bitmap Bitmap { get; protected set; }
 
         public static Texture Load(string path)
         {

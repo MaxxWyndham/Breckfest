@@ -24,10 +24,11 @@ Commandline options:
 -f[orce] : Breckfest will automatically overwrite files  
 -dump : Decompresses any valid Wreckfest compressed file  
 -compress : Compresses any valid Wreckfest decompressed file  
--norename : Prevent Breckfest from adding the ".x" (danger!  this combined with -force is a dangerous combination)
--png : Completely unnecessary command to tell Breckfest to convert bmap to png
--dds : Don't output png files, write dds files instead
--tga : Say no to png and dds, TGA is the new king
+-norename : Prevent Breckfest from adding the ".x" (danger!  this combined with -force is a dangerous combination)  
+-png : Completely unnecessary command to tell Breckfest to convert bmap to png  
+-dds : Don't output png files, write dds files instead  
+~~-tga : Say no to png and dds, TGA is the new king~~  
+-nomipmaps : Don't autogenerate mipmaps  
 _Breckfest.exe -c "c:\path\to\file.png"_ will create clutter bmap file.x.bmap  
 _Breckfest.exe -clutter "c:\path\to\file.png"_ will do the same thing
 
