@@ -10,7 +10,8 @@ namespace breckFest
     {
         PNG,
         DDS,
-        TGA
+        TGA,
+        TIF
     }
 
     class Program
@@ -81,6 +82,10 @@ namespace breckFest
 
                             case "-tga":
                                 settings.SaveAs = OutputFormat.TGA;
+                                break;
+
+                            case "-tif":
+                                settings.SaveAs = OutputFormat.TIF;
                                 break;
 
                             case "-norename":

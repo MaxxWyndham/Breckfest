@@ -133,6 +133,10 @@ namespace breckFest
                         DDS.Decompress().Save(path, ImageFormat.Png);
                         break;
 
+                    case OutputFormat.TIF:
+                        DDS.Decompress().Save(path, ImageFormat.Tiff);
+                        break;
+
                     case OutputFormat.DDS:
                         DDS.Save(path);
                         break;

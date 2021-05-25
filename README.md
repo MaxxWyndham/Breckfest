@@ -29,6 +29,7 @@ Commandline options:
 -png : Completely unnecessary command to tell Breckfest to convert bmap to png  
 -dds : Don't output png files, write dds files instead  
 ~~-tga : Say no to png and dds, TGA is the new king~~  
+-tif : For completeness  
 -nomipmaps : Don't autogenerate mipmaps  
 _Breckfest.exe -c "c:\path\to\file.png"_ will create clutter bmap file.x.bmap  
 _Breckfest.exe -clutter "c:\path\to\file.png"_ will do the same thing
