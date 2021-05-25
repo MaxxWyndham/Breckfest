@@ -6,7 +6,7 @@ namespace breckFest
     {
         public static void Load(string path, bool dump = false)
         {
-            byte[] buff = new byte[134217728];
+            byte[] buff = new byte[536870912];
             int size = 0;
 
             using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(path)))

@@ -167,6 +167,7 @@ namespace breckFest
             BitmapData bmpdata;
             PixelFormat format = PixelFormat.Format32bppArgb;
             byte size = (byte)(PixelDepth / 8);
+            byte[] contentBuffer;
 
             if (size == 3) { format = PixelFormat.Format24bppRgb; }
 
@@ -209,19 +210,31 @@ namespace breckFest
                             }
                         }
 
-                        byte[] contentBuffer = new byte[nms.Length];
-                        nms.Position = 0;
-                        nms.Read(contentBuffer, 0, contentBuffer.Length);
+                        contentBuffer = new byte[nms.Length];
 
-                        Marshal.Copy(contentBuffer, 0, bmpdata.Scan0, contentBuffer.Length);
+                        for (int y = Height - 1; y >= 0; y--)
+                        {
+                            nms.Position = y * bmpdata.Stride;
+                            nms.Read(contentBuffer, (Height - y - 1) * bmpdata.Stride, bmpdata.Stride);
+                        }
                     }
                     break;
 
                 default:
-                    Marshal.Copy(Data, 0, bmpdata.Scan0, Data.Length);
+                    contentBuffer = new byte[Data.Length];
+
+                    using (MemoryStream ms = new MemoryStream(Data))
+                    {
+                        for (int y = Height - 1; y >= 0; y--)
+                        {
+                            ms.Position = y * bmpdata.Stride;
+                            ms.Read(contentBuffer, (Height - y - 1) * bmpdata.Stride, bmpdata.Stride);
+                        }
+                    }
                     break;
             }
 
+            Marshal.Copy(contentBuffer, 0, bmpdata.Scan0, contentBuffer.Length);
             bmp.UnlockBits(bmpdata);
 
             return bmp;

@@ -5,6 +5,7 @@ namespace breckFest
 {
     public class BC5U
     {
+        // buffer expected in BGRA format
         public static byte[] Compress(byte[] buffer, ushort width, ushort height)
         {
             List<byte> compressed = new List<byte>();
@@ -21,7 +22,7 @@ namespace breckFest
                     {
                         for (int x = 0; x < 4; x++)
                         {
-                            redPixels[4 * y + x] = buffer[startIndex + x * 4 + y * width * 4];
+                            redPixels[4 * y + x] = buffer[startIndex + 2 + x * 4 + y * width * 4];
                             greenPixels[4 * y + x] = buffer[startIndex + 1 + x * 4 + y * width * 4];
                         }
                     }
@@ -45,15 +46,7 @@ namespace breckFest
                     byte[] redIndices = convertIndicesToBytes(calculateIndices(redPixels, minRedColour, maxRedColour));
                     byte[] greenIndices = convertIndicesToBytes(calculateIndices(greenPixels, minGreenColour, maxGreenColour));
 
-                    compressed.Add(maxRedColour);
-                    compressed.Add(minRedColour);
-                    compressed.Add(redIndices[5]);
-                    compressed.Add(redIndices[4]);
-                    compressed.Add(redIndices[3]);
-                    compressed.Add(redIndices[2]);
-                    compressed.Add(redIndices[1]);
-                    compressed.Add(redIndices[0]);
-
+                    // output green first to match Wreckfest
                     compressed.Add(maxGreenColour);
                     compressed.Add(minGreenColour);
                     compressed.Add(greenIndices[5]);
@@ -62,6 +55,15 @@ namespace breckFest
                     compressed.Add(greenIndices[2]);
                     compressed.Add(greenIndices[1]);
                     compressed.Add(greenIndices[0]);
+
+                    compressed.Add(maxRedColour);
+                    compressed.Add(minRedColour);
+                    compressed.Add(redIndices[5]);
+                    compressed.Add(redIndices[4]);
+                    compressed.Add(redIndices[3]);
+                    compressed.Add(redIndices[2]);
+                    compressed.Add(redIndices[1]);
+                    compressed.Add(redIndices[0]);
 
                     i += 4 * 4;
                 }
@@ -136,12 +138,14 @@ namespace breckFest
 
             byte[] buffer = new byte[width * height * 4];
 
+            // red and green swapped to correct for the channel swap above
+            // blue set at 255
             for (uint i = 0, j = 0; i < width * height * 4; i += 4, j++)
             {
-                buffer[i + 2] = redBuffer[j];
-                buffer[i + 1] = greenBuffer[j];
-                buffer[i + 0] = 255;
                 buffer[i + 3] = 255;
+                buffer[i + 2] = greenBuffer[j];
+                buffer[i + 1] = redBuffer[j];
+                buffer[i + 0] = 255;
             }
 
             return buffer;

@@ -122,6 +122,7 @@ namespace breckFest
         {
             SquishFlags flags = SquishFlags.kDxt1;
             bool compressed = true;
+            bool bc5uCompressed = false;
 
             switch (format)
             {
@@ -135,6 +136,10 @@ namespace breckFest
 
                 case D3DFormat.DXT5:
                     flags = SquishFlags.kDxt5;
+                    break;
+
+                case D3DFormat.BC5U:
+                    bc5uCompressed = true;
                     break;
 
                 default:
@@ -160,7 +165,11 @@ namespace breckFest
                 Marshal.Copy(bmpdata.Scan0, data, 0, bmpdata.Stride * bmpdata.Height);
                 mipmapBitmap.UnlockBits(bmpdata);
 
-                if (compressed)
+                if (bc5uCompressed)
+                {
+                    mip.Data = BC5U.Compress(data, (ushort)mip.Width, (ushort)mip.Height);
+                }
+                else if (compressed)
                 {
                     Console.WriteLine($"Squishing : {mip.Width}x{mip.Height}");
 
@@ -237,8 +246,8 @@ namespace breckFest
                 {
                     MipMap mip = new MipMap
                     {
-                        Width = dds.Width >> i,
-                        Height = dds.Height >> i
+                        Width = Math.Max(1, dds.Width >> i),
+                        Height = Math.Max(1, dds.Height >> i)
                     };
 
                     switch (dds.Format)
@@ -307,6 +316,7 @@ namespace breckFest
                 case D3DFormat.DXT1:
                 case D3DFormat.DXT3:
                 case D3DFormat.DXT5:
+                case D3DFormat.BC5U:
                     bw.Write(4);        // fourCC length
                     bw.Write(dds.Format.ToString().ToCharArray());
                     bw.Write(0);
@@ -327,7 +337,7 @@ namespace breckFest
                     break;
             }
 
-            bw.Write((int)DDSCaps.DDSCAPS_TEXTURE);
+            bw.Write((int)(DDSCaps.DDSCAPS_TEXTURE | DDSCaps.DDSCAPS_COMPLEX | DDSCaps.DDSCAPS_MIPMAP));
             bw.Write(0);    // Caps 2
             bw.Write(0);    // Caps 3
             bw.Write(0);    // Caps 4

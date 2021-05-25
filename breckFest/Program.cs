@@ -66,6 +66,7 @@ namespace breckFest
 
                             case "-bc5u":
                                 settings.Format = D3DFormat.BC5U;
+                                settings.GenerateMipMaps = false;
                                 break;
 
                             case "-raw":
@@ -301,6 +302,7 @@ namespace breckFest
                 else if (Path.GetFileNameWithoutExtension(path).EndsWith(".bc5u", StringComparison.OrdinalIgnoreCase))
                 {
                     settings.Format = D3DFormat.BC5U;
+                    settings.GenerateMipMaps = false;
                     path = path.Replace(".bc5u", "", true);
                 }
 
