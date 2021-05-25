@@ -51,6 +51,8 @@ namespace breckFest
                                 using (BinaryWriter bw = new BinaryWriter(fs))
                                 {
                                     bw.Write(br.ReadBytes(contents.ReadInt32()));
+
+                                    while (br.PeekInt32() != 0 && br.BaseStream.Position < br.BaseStream.Length) { bw.Write(br.ReadByte()); }
                                 }
 
                                 if (dump) { Load(outFile, true); }

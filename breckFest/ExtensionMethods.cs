@@ -38,6 +38,17 @@ namespace breckFest
             return r;
         }
 
+        public static int PeekInt32(this BinaryReader br)
+        {
+            if (br.BaseStream.Position + 4 > br.BaseStream.Length) { return -1; }
+
+            int i = br.ReadInt32();
+
+            br.BaseStream.Seek(-4, SeekOrigin.Current);
+
+            return i;
+        }
+
         public static string Replace(this string s, string oldValue, string newValue, bool ignoreCase)
         {
             return Regex.Replace(s, oldValue, newValue, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None);
