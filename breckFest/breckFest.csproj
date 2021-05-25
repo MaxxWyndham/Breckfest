@@ -66,6 +66,7 @@
     <Compile Include="BMAP.cs" />
     <Compile Include="DDS.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="WreckfestExtensions.cs" />
     <Compile Include="LZ4Compress.cs" />
     <Compile Include="LZ4Decompress.cs" />
     <Compile Include="Program.cs" />

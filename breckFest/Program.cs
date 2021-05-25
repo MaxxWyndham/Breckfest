@@ -6,94 +6,6 @@ using System.Reflection;
 
 namespace breckFest
 {
-    public enum WreckfestExtensions
-    {
-        agan = 1,
-        agen = 0,
-        aist = 0,
-        apbl = 0,
-        bmap = 3,
-        ccms = 0,
-        ccps = 0,
-        ccrs = 0,
-        clgs = 0,
-        clhe = 1,
-        clmx = 0,
-        cwea = 0,
-        dcty = 0,
-        dfsc = 3,
-        dmsd = 0,
-        dntp = 1,
-        dset = 4,
-        enga = 3,
-        engs = 6,
-        evss = 0,
-        fnts = 1,
-        fxac = 1,
-        fxaf = 0,
-        fxbl = 0,
-        fxbp = 0,
-        fxcn = 0,
-        fxdf = 0,
-        fxlf = 0,
-        fxpm = 0,
-        fxsf = 0,
-        fxss = 0,
-        fxtg = 0,
-        fxtr = 0,
-        gmpl = 0xd,
-        grge = 3,
-        irsu = 0,
-        jobs = 0,
-        jodb = 0,
-        jofi = 0,
-        johi = 0,
-        jopi = 0,
-        joun = 0,
-        mchc = 0,
-        panl = 4,
-        prfb = 0,
-        rlao = 0,
-        rlod = 0,
-        scne = 8,
-        srfl = 0,
-        surs = 1,
-        tcat = 2,
-        teli = 0,
-        teno = 2,
-        upgb = 0,
-        upgr = 0xd,
-        upss = 1,
-        vail = 0,
-        vdst = 0,
-        vean = 2,
-        vebr = 1,
-        vech = 3,
-        vedi = 3,
-        veen = 8,
-        vees = 1,
-        vege = 3,
-        vehi = 5,
-        vesh = 1,
-        vest = 4,
-        vesu = 5,
-        veti = 7,
-        vetr = 0,
-        vhae = 0,
-        vhcl = 2,
-        vhcp = 0,
-        vpdl = 0,
-        vpdp = 0,
-        vpdr = 1,
-        vpst = 2,
-        vsbd = 2,
-        vsbp = 1,
-        vsks = 1,
-        vstd = 1,
-        weat = 3,
-        weli = 0
-    }
-
     public enum OutputFormat
     {
         PNG,
@@ -113,6 +25,8 @@ namespace breckFest
             string suppliedFile = null;
 
             Console.WriteLine($"Breckfest v{version.Major}.{version.Minor}.{version.Build}");
+
+            if (File.Exists("extensions.bowl")) { WreckfestExtensions.Load(Path.GetFullPath("extensions.bowl")); }
 
             if (args.Length > 0)
             {
@@ -252,7 +166,7 @@ namespace breckFest
             }
             else if (settings.Compress)
             {
-                if (Enum.TryParse(extension, out WreckfestExtensions we))
+                if (WreckfestExtensions.Contains(extension))
                 {
                     using (MemoryStream ms = new MemoryStream(File.ReadAllBytes(path)))
                     using (BinaryReader br = new BinaryReader(ms))
@@ -276,7 +190,7 @@ namespace breckFest
                                 bw.Write(extension[2]);
                                 bw.Write(extension[1]);
                                 bw.Write(extension[0]);
-                                bw.Write((int)we);
+                                bw.Write(WreckfestExtensions.HeaderFor(extension));
 
                                 int[] hashTable = new int[1 << (14 - 2)];
                                 byte[] output = new byte[LZ4Compress.CalculateChunkSize(input.Length)];
