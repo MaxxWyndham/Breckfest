@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace breckFest
 {
@@ -17,11 +18,46 @@ namespace breckFest
                 while (br.BaseStream.Position < br.BaseStream.Length)
                 {
                     int length = (int)br.ReadUInt32();
-
+ 
                     using (MemoryStream lzs = new MemoryStream(br.ReadBytes(length)))
                     using (LZ4Decompress lz4 = new LZ4Decompress(lzs))
                     {
                         size += lz4.Read(buff, size, buff.Length);
+                    }
+
+                    if (Path.GetExtension(path).ToLower() == ".pckd") 
+                    {
+                        using (MemoryStream contentstream = new MemoryStream(buff, 0, size))
+                        using (BinaryReader contents = new BinaryReader(contentstream))
+                        {
+                            contents.ReadBytes(8);
+
+                            int contentCount = contents.ReadInt32();
+
+                            for (int i = 0; i < contentCount; i++)
+                            {
+                                br.ReadInt32();
+
+                                int filenameLength = contents.ReadInt32();
+                                string filename = contents.ReadString(filenameLength);
+
+                                string outFile = Path.Combine(Path.GetDirectoryName(Path.GetFullPath(path)), filename.Replace("/", @"\"));
+
+                                if (!Directory.Exists(Path.GetDirectoryName(outFile))) { Directory.CreateDirectory(Path.GetDirectoryName(outFile)); }
+
+                                Console.WriteLine($"   Extracting: {filename}");
+
+                                using (FileStream fs = new FileStream(outFile, FileMode.Create))
+                                using (BinaryWriter bw = new BinaryWriter(fs))
+                                {
+                                    bw.Write(br.ReadBytes(contents.ReadInt32()));
+                                }
+
+                                if (dump) { Load(outFile, true); }
+
+                                contents.ReadInt32();
+                            }
+                        }
                     }
                 }
             }
